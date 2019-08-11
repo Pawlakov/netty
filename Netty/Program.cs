@@ -8,6 +8,7 @@
     {
         public static void Main(string[] args)
         {
+            Console.WriteLine("Starting.");
             var random = new RandomInitializer();
             var input = new float[4, 4];
             for (var i = 0; i < 4; ++i)
@@ -20,8 +21,28 @@
 
             var layer = new ConvolutionLayer(4, 4);
             var output = layer.Calculate(input);
-            Console.WriteLine(input);
-            Console.WriteLine(output);
+            for (var i = 0; i < 4; ++i)
+            {
+                Console.Write("[");
+                for (var j = 0; j < 4; ++j)
+                {
+                    Console.Write("{0:0.00} ", input[i, j]);
+                }
+
+                Console.WriteLine("]");
+            }
+            
+            Console.WriteLine();
+            for (var i = 0; i < 4; ++i)
+            {
+                Console.Write("[");
+                for (var j = 0; j < 4; ++j)
+                {
+                    Console.Write("{0:0.00} ", output[i, j]);
+                }
+                
+                Console.WriteLine("]");
+            }
         }
     }
 }
