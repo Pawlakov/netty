@@ -3,10 +3,6 @@
     using Netty.Net.Helpers;
     using System;
 
-    // stride = 1
-    // padding = zeros
-    // filter diameter = 3
-    // 
     public class ConvolutionLayer
     {
         private readonly int width;
@@ -76,19 +72,13 @@
 
         private void UnfoldInput()
         {
-            for (var i = 0; i < height; ++i)
+            for (var i = 0; i < height * width; ++i)
             {
-                for(var j = 0; j < 3; ++j)
+                for (var j = 0; j < 9; ++j)
                 {
-                    var x = i + j;
-                    for (var ii = 0; ii < width; ++ii)
-                    {
-                        for (var jj = 0; jj < 3; ++jj)
-                        {
-                            var y = ii + jj;
-                            inputUnfolded[i * width + ii, j * 3 + jj] = inputWithPadding[x, y];
-                        }
-                    }
+                    var x = (i / width) + (j / 3);
+                    var y = (i % width) + (j % 3);
+                    inputUnfolded[i, j] = inputWithPadding[x, y];
                 }
             }
         }
