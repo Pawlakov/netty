@@ -12,6 +12,7 @@
         private readonly int width;
         private readonly int height;
         private readonly float[,] filter;
+        private readonly float bias;
         private readonly float[,] filterUnfolded;
         private readonly float[,] inputWithPadding;
         private readonly float[,] inputUnfolded;
@@ -32,9 +33,15 @@
                 }
             }
 
-            this.filterUnfolded = new float[9, 1];
+            this.bias = random.NextFloat();
+            this.filterUnfolded = new float[10, 1];
             this.inputWithPadding = new float[height + 2, width + 2];
-            this.inputUnfolded = new float[width * height, 9];
+            this.inputUnfolded = new float[width * height, 10];
+            for (var i = 0; i < width * height; ++i)
+            {
+                this.inputUnfolded[i, 9] = 1f;
+            }
+
             this.output = new float[height, width];
             this.outputUnfolded = new float[width * height, 1];
         }
@@ -95,6 +102,8 @@
                     this.filterUnfolded[(i * 3) + j, 0] = filter[i, j];
                 }
             }
+
+            this.filterUnfolded[9, 0] = bias;
         }
 
         private void FoldOutput()
