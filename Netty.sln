@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29123.89
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Netty", "Netty\Netty.csproj", "{8D1F2041-CF32-4B27-B3F6-960AC2333562}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8D1F2041-CF32-4B27-B3F6-960AC2333562}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D1F2041-CF32-4B27-B3F6-960AC2333562}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D1F2041-CF32-4B27-B3F6-960AC2333562}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D1F2041-CF32-4B27-B3F6-960AC2333562}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E8331BAA-821F-48DA-925F-39AC391C1169}
+	EndGlobalSection
+EndGlobal
