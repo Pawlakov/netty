@@ -1,7 +1,14 @@
-﻿namespace Netty.Net
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="ConvolutionLayer.cs" company="Paweł Matusek">
+//   Copyright (c) Paweł Matusek. All rights reserved.
+// </copyright>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Netty.Net
 {
-    using Netty.Net.Helpers;
     using System;
+
+    using Netty.Net.Helpers;
 
     public class ConvolutionLayer
     {
@@ -42,14 +49,31 @@
             this.outputUnfolded = new float[width * height, 1];
         }
 
-        public float[,] Calculate(float[,] input)
+        public float[,] FeedForward(float[,] input)
         {
-            ApplyInputPadding(input);
-            UnfoldInput();
-            UnfoldFilter();
-            MatrixHelper.Multiply(inputUnfolded, filterUnfolded, outputUnfolded, Activate);
-            FoldOutput();
-            return output;
+            this.ApplyInputPadding(input);
+            this.UnfoldInput();
+            this.UnfoldFilter();
+            MatrixHelper.Multiply(this.inputUnfolded, this.filterUnfolded, this.outputUnfolded, this.Activate);
+            this.FoldOutput();
+            return this.output;
+        }
+
+        public float CalculateError(float[,] template)
+        {
+            var sum = 0f;
+            var counter = 0;
+            for (var i = 0; i < template.GetLength(0); ++i)
+            {
+                for (var j = 0; j < template.GetLength(1); ++j)
+                {
+                    var difference = template[i, j] - this.output[i, j];
+                    sum += difference * difference;
+                    ++counter;
+                }
+            }
+
+            return sum / counter;
         }
 
         private float Activate(float value)
@@ -61,24 +85,24 @@
 
         private void ApplyInputPadding(float[,] input)
         {
-            for (var i = 0; i < height; ++i)
+            for (var i = 0; i < this.height; ++i)
             {
-                for (var j = 0; j < width; ++j)
+                for (var j = 0; j < this.width; ++j)
                 {
-                    inputWithPadding[i + 1, j + 1] = input[i, j];
+                    this.inputWithPadding[i + 1, j + 1] = input[i, j];
                 }
             }
         }
 
         private void UnfoldInput()
         {
-            for (var i = 0; i < height * width; ++i)
+            for (var i = 0; i < this.height * this.width; ++i)
             {
                 for (var j = 0; j < 9; ++j)
                 {
-                    var x = (i / width) + (j / 3);
-                    var y = (i % width) + (j % 3);
-                    inputUnfolded[i, j] = inputWithPadding[x, y];
+                    var x = (i / this.width) + (j / 3);
+                    var y = (i % this.width) + (j % 3);
+                    this.inputUnfolded[i, j] = this.inputWithPadding[x, y];
                 }
             }
         }
@@ -89,20 +113,20 @@
             {
                 for (var j = 0; j < 3; ++j)
                 {
-                    this.filterUnfolded[(i * 3) + j, 0] = filter[i, j];
+                    this.filterUnfolded[(i * 3) + j, 0] = this.filter[i, j];
                 }
             }
 
-            this.filterUnfolded[9, 0] = bias;
+            this.filterUnfolded[9, 0] = this.bias;
         }
 
         private void FoldOutput()
         {
-            for (var i = 0; i < height; ++i)
+            for (var i = 0; i < this.height; ++i)
             {
-                for (var j = 0; j < width; ++j)
+                for (var j = 0; j < this.width; ++j)
                 {
-                    this.output[i, j] = outputUnfolded[(i * width) + j, 0];
+                    this.output[i, j] = this.outputUnfolded[(i * this.width) + j, 0];
                 }
             }
         }
