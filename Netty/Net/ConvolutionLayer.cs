@@ -6,8 +6,6 @@
 
 namespace Netty.Net
 {
-    using System;
-
     using Netty.Net.Helpers;
 
     public class ConvolutionLayer
@@ -54,33 +52,9 @@ namespace Netty.Net
             this.ApplyInputPadding(input);
             this.UnfoldInput();
             this.UnfoldFilter();
-            MatrixHelper.Multiply(this.inputUnfolded, this.filterUnfolded, this.outputUnfolded, this.Activate);
+            MatrixHelper.Multiply(this.inputUnfolded, this.filterUnfolded, this.outputUnfolded, ActivationHelper.Activation);
             this.FoldOutput();
             return this.output;
-        }
-
-        public float CalculateError(float[,] template)
-        {
-            var sum = 0f;
-            var counter = 0;
-            for (var i = 0; i < template.GetLength(0); ++i)
-            {
-                for (var j = 0; j < template.GetLength(1); ++j)
-                {
-                    var difference = template[i, j] - this.output[i, j];
-                    sum += difference * difference;
-                    ++counter;
-                }
-            }
-
-            return sum / counter;
-        }
-
-        private float Activate(float value)
-        {
-            var expResult = Math.Exp(value);
-            var result = 1 / (float)(1 + expResult);
-            return result;
         }
 
         private void ApplyInputPadding(float[,] input)

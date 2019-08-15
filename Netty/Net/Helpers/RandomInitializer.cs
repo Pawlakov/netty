@@ -21,7 +21,7 @@ namespace Netty.Net.Helpers
         /// <summary>
         /// Returns a random floating point number (by default greater than or equal to -1.0, and less than 1.0).
         /// </summary>
-        /// <param name="range">
+        /// <param name="rangeSize">
         /// Size of the range.
         /// </param>
         /// <param name="offset">
@@ -30,15 +30,18 @@ namespace Netty.Net.Helpers
         /// <returns>
         /// Random <see cref="float"/>.
         /// </returns>
-        public float NextFloat(float range = 2f, float offset = -1f)
+        /// <exception cref="ArgumentException">
+        /// Thrown when the range size is negative.
+        /// </exception>
+        public float NextFloat(float rangeSize = 2f, float offset = -1f)
         {
-            if (range < 0f)
+            if (rangeSize < 0f)
             {
-                throw new ArgumentException("Range size cannot be below zero.", nameof(range));
+                throw new ArgumentException("Range size cannot be below zero.", nameof(rangeSize));
             }
 
             var result = (float)this.random.NextDouble();
-            result *= range;
+            result *= rangeSize;
             result += offset;
             return result;
         }

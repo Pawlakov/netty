@@ -1,8 +1,9 @@
 ﻿namespace Netty
 {
+    using System;
+
     using Netty.Net;
     using Netty.Net.Helpers;
-    using System;
 
     public static class Program
     {
@@ -21,6 +22,8 @@
 
                 var layer = new ConvolutionLayer(4, 4);
                 var output = layer.FeedForward(input);
+                var gradient = new float[4, 4];
+                ErrorHelper.CalculateErrorGradient(input, output, gradient);
                 for (var i = 0; i < 4; ++i)
                 {
                     Console.Write("[");
@@ -44,7 +47,17 @@
                     Console.WriteLine("]");
                 }
 
-                Console.WriteLine("Error: {0:0.0000}", layer.CalculateError(input));
+                Console.WriteLine();
+                for (var i = 0; i < 4; ++i)
+                {
+                    Console.Write("[");
+                    for (var j = 0; j < 4; ++j)
+                    {
+                        Console.Write("{0:+0.0000;-0.0000} ", gradient[i, j]);
+                    }
+
+                    Console.WriteLine("]");
+                }
                 Console.ReadKey();
                 Console.Clear();
             }

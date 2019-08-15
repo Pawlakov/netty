@@ -30,6 +30,12 @@ namespace Netty.Net.Helpers
         /// <param name="postMap">
         /// Function transforming the result value before inserting it into the output matrix. Omit for plain assignment.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when one of the matrices is null.
+        /// </exception>
+        /// <exception cref="MatrixException">
+        /// Thrown when matrices dimensions do not support multiplication.
+        /// </exception>
         public static void Multiply(float[,] a, float[,] b, float[,] output, Func<float, float> postMap = null)
         {
             if (postMap == null)
@@ -57,7 +63,7 @@ namespace Netty.Net.Helpers
             var commonDimension = a.GetLength(1);
             if (commonDimension != b.GetLength(0) || a.GetLength(0) != firstDimension || b.GetLength(1) != secondDimension)
             {
-                throw new MatrixException("Matrix dimensions do not support multiplication.");
+                throw new MatrixException("Matrices dimensions do not support multiplication.");
             }
 
             try
