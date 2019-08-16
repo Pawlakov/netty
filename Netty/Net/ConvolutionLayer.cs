@@ -6,27 +6,50 @@
 
 namespace Netty.Net
 {
+    using System;
+
     using Netty.Net.Helpers;
 
     public class ConvolutionLayer
     {
-        private readonly int width;
-        private readonly int height;
-        private readonly float[,] filter;
-        private readonly float bias;
-        private readonly float[,] filterUnfolded;
-        private readonly float[,] inputWithPadding;
-        private readonly float[,] inputUnfolded;
-        private readonly float[,] output;
-        private readonly float[,] outputUnfolded;
+        private readonly int size;
 
-        public ConvolutionLayer(int width, int height)
+        private readonly float[,] filter;
+
+        private float bias;
+
+        private readonly float[,] filterUnfolded;
+
+        private readonly float[,] inputWithPadding;
+
+        private readonly float[,] inputUnfolded;
+
+        private readonly float[,] output;
+
+        private readonly float[,] outputRaw;
+
+        private readonly float[,] outputRawUnfolded;
+
+        private readonly float[,] gradientOutputOverRawOutput;
+
+        private readonly float[,] gradientCostOverRawOutput;
+
+        private readonly float[,] gradientCostOverRawOutputUnfolded;
+
+        private readonly float[,] inputUnfoldedAlt;
+
+        private readonly float[,] gradientCostOverWeights;
+
+        private readonly float[,] gradientCostOverWeightsUnfolded;
+
+        private readonly float[,] inputGradient;
+
+        public ConvolutionLayer(int size)
         {
             var random = new RandomInitializer();
-            this.width = width;
-            this.height = height;
+            this.size = size;
             this.filter = new float[3, 3];
-            for(var i = 0; i < 3; ++i)
+            for (var i = 0; i < 3; ++i)
             {
                 for (var j = 0; j < 3; ++j)
                 {
@@ -36,73 +59,80 @@ namespace Netty.Net
 
             this.bias = random.NextFloat();
             this.filterUnfolded = new float[10, 1];
-            this.inputWithPadding = new float[height + 2, width + 2];
-            this.inputUnfolded = new float[width * height, 10];
-            for (var i = 0; i < width * height; ++i)
-            {
-                this.inputUnfolded[i, 9] = 1f;
-            }
-
-            this.output = new float[height, width];
-            this.outputUnfolded = new float[width * height, 1];
+            this.inputWithPadding = new float[size + 2, size + 2];
+            this.inputUnfolded = new float[size * size, 10];
+            this.output = new float[size, size];
+            this.outputRaw = new float[size, size];
+            this.outputRawUnfolded = new float[size * size, 1];
+            this.gradientOutputOverRawOutput = new float[size, size];
+            this.gradientCostOverRawOutput = new float[size, size];
+            this.gradientCostOverRawOutputUnfolded = new float[size * size, 1];
+            this.inputUnfoldedAlt = new float[9, size * size];
+            this.gradientCostOverWeights = new float[3, 3];
+            this.gradientCostOverWeightsUnfolded = new float[9, 1];
+            this.inputGradient = new float[size, size];
         }
 
         public float[,] FeedForward(float[,] input)
         {
-            this.ApplyInputPadding(input);
-            this.UnfoldInput();
-            this.UnfoldFilter();
-            MatrixHelper.Multiply(this.inputUnfolded, this.filterUnfolded, this.outputUnfolded, ActivationHelper.Activation);
-            this.FoldOutput();
+            MatrixHelper.Pad(input, this.inputWithPadding, 1);
+            MatrixHelper.UnfoldConvolutionInput(this.inputWithPadding, this.inputUnfolded, 3);
+            for (var i = 0; i < this.size * this.size; ++i)
+            {
+                this.inputUnfolded[i, 9] = 1f;
+            }
+
+            MatrixHelper.UnfoldConvolutionFilter(this.filter, this.filterUnfolded);
+            this.filterUnfolded[9, 0] = this.bias;
+            MatrixHelper.Multiply(this.inputUnfolded, this.filterUnfolded, this.outputRawUnfolded);
+            MatrixHelper.FoldConvolutionOutput(this.outputRawUnfolded, this.outputRaw);
+            for (var i = 0; i < this.size; ++i)
+            {
+                for (var j = 0; j < this.size; ++j)
+                {
+                    this.output[i, j] = ActivationHelper.Activation(this.outputRaw[i, j]);
+                }
+            }
+
             return this.output;
         }
 
-        private void ApplyInputPadding(float[,] input)
+        public float[,] BackPropagate(float[,] gradientCostOverOutput)
         {
-            for (var i = 0; i < this.height; ++i)
+            // Undo activation & calculate bias gradient.
+            var gradientCostOverBias = 0f;
+            for (var i = 0; i < this.size; ++i)
             {
-                for (var j = 0; j < this.width; ++j)
+                for (var j = 0; j < this.size; ++j)
                 {
-                    this.inputWithPadding[i + 1, j + 1] = input[i, j];
+                    this.gradientOutputOverRawOutput[i, j] = ActivationHelper.ActivationGradient(this.outputRaw[i, j]);
+                    this.gradientCostOverRawOutput[i, j] = gradientCostOverOutput[i, j] * this.gradientOutputOverRawOutput[i, j];
+                    gradientCostOverBias += this.gradientCostOverRawOutput[i, j];
                 }
             }
-        }
 
-        private void UnfoldInput()
-        {
-            for (var i = 0; i < this.height * this.width; ++i)
-            {
-                for (var j = 0; j < 9; ++j)
-                {
-                    var x = (i / this.width) + (j / 3);
-                    var y = (i % this.width) + (j % 3);
-                    this.inputUnfolded[i, j] = this.inputWithPadding[x, y];
-                }
-            }
-        }
+            // Calculate filter gradient.
+            //
+            // Calculate inputs gradient.
+            MatrixHelper.UnfoldConvolutionInput(this.inputWithPadding, this.inputUnfoldedAlt, this.size);
+            MatrixHelper.UnfoldConvolutionFilter(this.gradientCostOverRawOutput, this.gradientCostOverRawOutputUnfolded);
+            MatrixHelper.Multiply(this.inputUnfoldedAlt, this.gradientCostOverRawOutputUnfolded, this.gradientCostOverWeightsUnfolded);
+            MatrixHelper.FoldConvolutionOutput(this.gradientCostOverWeightsUnfolded, this.gradientCostOverWeights);
 
-        private void UnfoldFilter()
-        {
+            // Apply bias gradient.
+            this.bias -= gradientCostOverBias;
+
+            // Apply filter gradient.
             for (var i = 0; i < 3; ++i)
             {
                 for (var j = 0; j < 3; ++j)
                 {
-                    this.filterUnfolded[(i * 3) + j, 0] = this.filter[i, j];
+                    this.filter[i, j] -= this.gradientCostOverWeights[i, j];
                 }
             }
 
-            this.filterUnfolded[9, 0] = this.bias;
-        }
-
-        private void FoldOutput()
-        {
-            for (var i = 0; i < this.height; ++i)
-            {
-                for (var j = 0; j < this.width; ++j)
-                {
-                    this.output[i, j] = this.outputUnfolded[(i * this.width) + j, 0];
-                }
-            }
+            // Return input gradient.
+            return this.inputGradient;
         }
     }
 }

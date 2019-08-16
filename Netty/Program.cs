@@ -9,20 +9,20 @@
     {
         public static void Main(string[] args)
         {
+            var input = new float[4, 4];
+            for (var i = 0; i < 4; ++i)
+            {
+                for (var j = 0; j < 4; ++j)
+                {
+                    input[i, j] = 0.1f * (i + j);
+                }
+            }
+
+            var gradient = new float[4, 4];
+            var layer = new ConvolutionLayer(4);
             while (true)
             {
-                var input = new float[4, 4];
-                for (var i = 0; i < 4; ++i)
-                {
-                    for (var j = 0; j < 4; ++j)
-                    {
-                        input[i, j] = 0.1f * (i + j);
-                    }
-                }
-
-                var layer = new ConvolutionLayer(4, 4);
                 var output = layer.FeedForward(input);
-                var gradient = new float[4, 4];
                 ErrorHelper.CalculateErrorGradient(input, output, gradient);
                 for (var i = 0; i < 4; ++i)
                 {
@@ -47,19 +47,11 @@
                     Console.WriteLine("]");
                 }
 
-                Console.WriteLine();
-                for (var i = 0; i < 4; ++i)
-                {
-                    Console.Write("[");
-                    for (var j = 0; j < 4; ++j)
-                    {
-                        Console.Write("{0:+0.0000;-0.0000} ", gradient[i, j]);
-                    }
-
-                    Console.WriteLine("]");
-                }
+                Console.WriteLine("Error: {0:0.0000}", ErrorHelper.CalculateError(input, output));
                 Console.ReadKey();
                 Console.Clear();
+                ErrorHelper.CalculateErrorGradient(input, output, gradient);
+                layer.BackPropagate(gradient);
             }
         }
     }
