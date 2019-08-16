@@ -18,12 +18,20 @@
                 }
             }
 
-            var gradient = new float[4, 4];
-            var layer = new ConvolutionLayer(4);
+            var layers = new ConvolutionLayer[3];
+            for (var i = 0; i < 3; ++i)
+            {
+                layers[i] = new ConvolutionLayer(4);
+            }
+
             while (true)
             {
-                var output = layer.FeedForward(input);
-                ErrorHelper.CalculateErrorGradient(input, output, gradient);
+                var output = input;
+                for (var i = 0; i < 3; ++i)
+                {
+                    output = layers[i].FeedForward(output);
+                }
+
                 for (var i = 0; i < 4; ++i)
                 {
                     Console.Write("[");
@@ -50,8 +58,13 @@
                 Console.WriteLine("Error: {0:0.0000}", ErrorHelper.CalculateError(input, output));
                 Console.ReadKey();
                 Console.Clear();
+
+                var gradient = new float[4, 4];
                 ErrorHelper.CalculateErrorGradient(input, output, gradient);
-                layer.BackPropagate(gradient);
+                for (var i = 2; i >= 0; --i)
+                {
+                    gradient = layers[i].BackPropagate(gradient);
+                }
             }
         }
     }

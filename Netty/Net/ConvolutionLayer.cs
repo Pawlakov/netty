@@ -20,6 +20,10 @@ namespace Netty.Net
 
         private readonly float[,] filterUnfolded;
 
+        private readonly float[,] filterFlipped;
+
+        private readonly float[,] filterFlippedUnfolded;
+
         private readonly float[,] inputWithPadding;
 
         private readonly float[,] inputUnfolded;
@@ -36,13 +40,19 @@ namespace Netty.Net
 
         private readonly float[,] gradientCostOverRawOutputUnfolded;
 
+        private readonly float[,] gradientCostOverRawOutputWithPadding;
+
+        private readonly float[,] gradientCostOverRawOutputWithPaddingUnfolded;
+
         private readonly float[,] inputUnfoldedAlt;
 
         private readonly float[,] gradientCostOverWeights;
 
         private readonly float[,] gradientCostOverWeightsUnfolded;
 
-        private readonly float[,] inputGradient;
+        private readonly float[,] gradientCostOverInput;
+
+        private readonly float[,] gradientCostOverInputUnfolded;
 
         public ConvolutionLayer(int size)
         {
@@ -59,6 +69,8 @@ namespace Netty.Net
 
             this.bias = random.NextFloat();
             this.filterUnfolded = new float[10, 1];
+            this.filterFlipped = new float[3, 3];
+            this.filterFlippedUnfolded = new float[9, 1];
             this.inputWithPadding = new float[size + 2, size + 2];
             this.inputUnfolded = new float[size * size, 10];
             this.output = new float[size, size];
@@ -67,10 +79,13 @@ namespace Netty.Net
             this.gradientOutputOverRawOutput = new float[size, size];
             this.gradientCostOverRawOutput = new float[size, size];
             this.gradientCostOverRawOutputUnfolded = new float[size * size, 1];
+            this.gradientCostOverRawOutputWithPadding = new float[size + 2, size + 2];
+            this.gradientCostOverRawOutputWithPaddingUnfolded = new float[size * size, 9];
             this.inputUnfoldedAlt = new float[9, size * size];
             this.gradientCostOverWeights = new float[3, 3];
             this.gradientCostOverWeightsUnfolded = new float[9, 1];
-            this.inputGradient = new float[size, size];
+            this.gradientCostOverInput = new float[size, size];
+            this.gradientCostOverInputUnfolded = new float[size * size, 1];
         }
 
         public float[,] FeedForward(float[,] input)
@@ -112,12 +127,18 @@ namespace Netty.Net
             }
 
             // Calculate filter gradient.
-            //
-            // Calculate inputs gradient.
             MatrixHelper.UnfoldConvolutionInput(this.inputWithPadding, this.inputUnfoldedAlt, this.size);
             MatrixHelper.UnfoldConvolutionFilter(this.gradientCostOverRawOutput, this.gradientCostOverRawOutputUnfolded);
             MatrixHelper.Multiply(this.inputUnfoldedAlt, this.gradientCostOverRawOutputUnfolded, this.gradientCostOverWeightsUnfolded);
             MatrixHelper.FoldConvolutionOutput(this.gradientCostOverWeightsUnfolded, this.gradientCostOverWeights);
+
+            // Calculate inputs gradient.
+            MatrixHelper.Pad(this.gradientCostOverRawOutput, this.gradientCostOverRawOutputWithPadding, 1);
+            MatrixHelper.Flip(this.filter, this.filterFlipped);
+            MatrixHelper.UnfoldConvolutionInput(this.gradientCostOverRawOutputWithPadding, this.gradientCostOverRawOutputWithPaddingUnfolded, 3);
+            MatrixHelper.UnfoldConvolutionFilter(this.filterFlipped, this.filterFlippedUnfolded);
+            MatrixHelper.Multiply(this.gradientCostOverRawOutputWithPaddingUnfolded, this.filterFlippedUnfolded, this.gradientCostOverInputUnfolded);
+            MatrixHelper.FoldConvolutionOutput(this.gradientCostOverInputUnfolded, this.gradientCostOverInput);
 
             // Apply bias gradient.
             this.bias -= gradientCostOverBias;
@@ -132,7 +153,7 @@ namespace Netty.Net
             }
 
             // Return input gradient.
-            return this.inputGradient;
+            return this.gradientCostOverInput;
         }
     }
 }

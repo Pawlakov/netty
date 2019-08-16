@@ -248,5 +248,33 @@ namespace Netty.Net.Helpers
                 }
             }
         }
+
+        public static void Flip(float[,] input, float[,] output)
+        {
+            if (input == null)
+            {
+                throw new ArgumentNullException(nameof(input));
+            }
+
+            if (output == null)
+            {
+                throw new ArgumentNullException(nameof(output));
+            }
+
+            var firstDimension = input.GetLength(0);
+            var secondDimension = input.GetLength(1);
+            if (output.GetLength(0) != firstDimension || output.GetLength(1) != secondDimension)
+            {
+                throw new MatrixException("Matrices dimensions do not support this operation.");
+            }
+
+            for (var i = 0; i < firstDimension; ++i)
+            {
+                for (var j = 0; j < secondDimension; ++j)
+                {
+                    output[firstDimension - i - 1, secondDimension - j - 1] = input[i, j];
+                }
+            }
+        }
     }
 }
