@@ -100,56 +100,40 @@ namespace Netty.Net.Helpers
                 throw new ArgumentNullException(nameof(output));
             }
 
-            if (padding < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(padding), padding, "Padding cannot be below 0.");
-            }
-
-            var firstDimension = input.GetLength(0);
-            var secondDimension = input.GetLength(1);
-            if (output.GetLength(0) != firstDimension + (padding * 2) || output.GetLength(1) != secondDimension + (padding * 2))
-            {
-                throw new MatrixException("Matrices dimensions do not support this operation.");
-            }
-
-            for (var i = 0; i < firstDimension; ++i)
-            {
-                for (var j = 0; j < secondDimension; ++j)
+            if (padding >= 0)
+            { 
+                var firstDimension = input.GetLength(0);
+                var secondDimension = input.GetLength(1);
+                if (output.GetLength(0) != firstDimension + (padding * 2)
+                    || output.GetLength(1) != secondDimension + (padding * 2))
                 {
-                    output[i + padding, j + padding] = input[i, j];
+                    throw new MatrixException("Matrices dimensions do not support this operation.");
+                }
+
+                for (var i = 0; i < firstDimension; ++i)
+                {
+                    for (var j = 0; j < secondDimension; ++j)
+                    {
+                        output[i + padding, j + padding] = input[i, j];
+                    }
                 }
             }
-        }
-
-        public static void UndoPadding(float[,] input, float[,] output, int padding)
-        {
-            if (input == null)
+            else
             {
-                throw new ArgumentNullException(nameof(input));
-            }
-
-            if (output == null)
-            {
-                throw new ArgumentNullException(nameof(output));
-            }
-
-            if (padding < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(padding), padding, "Padding cannot be below 0.");
-            }
-
-            var firstDimension = output.GetLength(0);
-            var secondDimension = output.GetLength(1);
-            if (input.GetLength(0) != firstDimension + (padding * 2) || input.GetLength(1) != secondDimension + (padding * 2))
-            {
-                throw new MatrixException("Matrices dimensions do not support this operation.");
-            }
-
-            for (var i = 0; i < firstDimension; ++i)
-            {
-                for (var j = 0; j < secondDimension; ++j)
+                padding = -padding;
+                var firstDimension = output.GetLength(0);
+                var secondDimension = output.GetLength(1);
+                if (input.GetLength(0) != firstDimension + (padding * 2) || input.GetLength(1) != secondDimension + (padding * 2))
                 {
-                    output[i, j] = input[i + padding, j + padding];
+                    throw new MatrixException("Matrices dimensions do not support this operation.");
+                }
+
+                for (var i = 0; i < firstDimension; ++i)
+                {
+                    for (var j = 0; j < secondDimension; ++j)
+                    {
+                        output[i, j] = input[i + padding, j + padding];
+                    }
                 }
             }
         }

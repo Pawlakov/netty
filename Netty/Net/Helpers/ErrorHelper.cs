@@ -16,7 +16,7 @@ namespace Netty.Net.Helpers
     public static class ErrorHelper
     {
         /// <summary>
-        /// Calculates the square error.
+        /// Calculates the mean squared error.
         /// </summary>
         /// <param name="template">
         /// Expected output.
@@ -53,6 +53,7 @@ namespace Netty.Net.Helpers
             }
 
             var sum = 0f;
+            var n = firstDimension * secondDimension;
             for (var i = 0; i < firstDimension; ++i)
             {
                 for (var j = 0; j < secondDimension; ++j)
@@ -62,11 +63,11 @@ namespace Netty.Net.Helpers
                 }
             }
 
-            return sum;
+            return sum / n;
         }
 
         /// <summary>
-        /// Calculates error gradient of the square error function with regard to output.
+        /// Calculates error gradient of the mean squared error function with regard to output.
         /// </summary>
         /// <param name="template">
         /// Expected output.
@@ -107,11 +108,12 @@ namespace Netty.Net.Helpers
                 throw new MatrixException("The dimensions of these matrices do not align.");
             }
 
+            var n = firstDimension * secondDimension;
             for (var i = 0; i < firstDimension; ++i)
             {
                 for (var j = 0; j < secondDimension; ++j)
                 {
-                    gradient[i, j] = -2f * (template[i, j] - subject[i, j]);
+                    gradient[i, j] = (-2f / n) * (template[i, j] - subject[i, j]);
                 }
             }
         }

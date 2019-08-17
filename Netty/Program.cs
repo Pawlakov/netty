@@ -7,65 +7,51 @@
 
     public static class Program
     {
+        private const int Size = 6;
+
+        private const int Padding = 1;
+
+        private const float TargetError = 0.0005f;
+
         public static void Main(string[] args)
         {
-            var input = new float[4, 4];
-            for (var i = 0; i < 4; ++i)
+            var input = new float[Size, Size];
+            for (var i = 0; i < Size; ++i)
             {
-                for (var j = 0; j < 4; ++j)
+                for (var j = 0; j < Size; ++j)
                 {
                     input[i, j] = 0.1f * (i + j);
                 }
             }
 
-            var layers = new ConvolutionLayer[3];
-            for (var i = 0; i < 3; ++i)
+            var inputUnpadded = new float[Size + 2 * (Padding - 1), Size + 2 * (Padding - 1)];
+            MatrixHelper.Pad(input, inputUnpadded, Padding - 1);
+            var layer = new ConvolutionLayer(Size, Padding);
+            var error = 1f;
+            float[,] output = null;
+            while (error >= TargetError)
             {
-                layers[i] = new ConvolutionLayer(4);
+                output = layer.FeedForward(input);
+                error = ErrorHelper.CalculateError(inputUnpadded, output);
+                var gradient = new float[output.GetLength(0), output.GetLength(1)];
+                ErrorHelper.CalculateErrorGradient(inputUnpadded, output, gradient);
+                layer.BackPropagate(gradient);
             }
 
-            while (true)
+            Console.WriteLine();
+            for (var i = 0; i < output.GetLength(0); ++i)
             {
-                var output = input;
-                for (var i = 0; i < 3; ++i)
+                Console.Write("[");
+                for (var j = 0; j < output.GetLength(1); ++j)
                 {
-                    output = layers[i].FeedForward(output);
+                    Console.Write("{0:0.0000} ", output[i, j]);
                 }
 
-                for (var i = 0; i < 4; ++i)
-                {
-                    Console.Write("[");
-                    for (var j = 0; j < 4; ++j)
-                    {
-                        Console.Write("{0:0.0000} ", input[i, j]);
-                    }
-
-                    Console.WriteLine("]");
-                }
-
-                Console.WriteLine();
-                for (var i = 0; i < 4; ++i)
-                {
-                    Console.Write("[");
-                    for (var j = 0; j < 4; ++j)
-                    {
-                        Console.Write("{0:0.0000} ", output[i, j]);
-                    }
-
-                    Console.WriteLine("]");
-                }
-
-                Console.WriteLine("Error: {0:0.0000}", ErrorHelper.CalculateError(input, output));
-                Console.ReadKey();
-                Console.Clear();
-
-                var gradient = new float[4, 4];
-                ErrorHelper.CalculateErrorGradient(input, output, gradient);
-                for (var i = 2; i >= 0; --i)
-                {
-                    gradient = layers[i].BackPropagate(gradient);
-                }
+                Console.WriteLine("]");
             }
+
+            Console.WriteLine();
+            Console.WriteLine("Error: {0:0.0000}", error);
         }
     }
 }

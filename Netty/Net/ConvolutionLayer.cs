@@ -6,13 +6,15 @@
 
 namespace Netty.Net
 {
-    using System;
-
     using Netty.Net.Helpers;
 
     public class ConvolutionLayer
     {
         private readonly int size;
+
+        private readonly int padding;
+
+        private readonly int outputSize;
 
         private readonly float[,] filter;
 
@@ -54,10 +56,12 @@ namespace Netty.Net
 
         private readonly float[,] gradientCostOverInputUnfolded;
 
-        public ConvolutionLayer(int size)
+        public ConvolutionLayer(int size, int padding)
         {
             var random = new RandomInitializer();
             this.size = size;
+            this.padding = padding;
+            this.outputSize = size - 3 + 1 + (2 * padding);
             this.filter = new float[3, 3];
             for (var i = 0; i < 3; ++i)
             {
@@ -68,42 +72,42 @@ namespace Netty.Net
             }
 
             this.bias = random.NextFloat();
-            this.filterUnfolded = new float[10, 1];
+            this.filterUnfolded = new float[(3 * 3) + 1, 1];
             this.filterFlipped = new float[3, 3];
-            this.filterFlippedUnfolded = new float[9, 1];
-            this.inputWithPadding = new float[size + 2, size + 2];
-            this.inputUnfolded = new float[size * size, 10];
-            this.output = new float[size, size];
-            this.outputRaw = new float[size, size];
-            this.outputRawUnfolded = new float[size * size, 1];
-            this.gradientOutputOverRawOutput = new float[size, size];
-            this.gradientCostOverRawOutput = new float[size, size];
-            this.gradientCostOverRawOutputUnfolded = new float[size * size, 1];
-            this.gradientCostOverRawOutputWithPadding = new float[size + 2, size + 2];
-            this.gradientCostOverRawOutputWithPaddingUnfolded = new float[size * size, 9];
-            this.inputUnfoldedAlt = new float[9, size * size];
+            this.filterFlippedUnfolded = new float[3 * 3, 1];
+            this.inputWithPadding = new float[size + (2 * padding), size + (2 * padding)];
+            this.inputUnfolded = new float[this.outputSize * this.outputSize, (3 * 3) + 1];
+            this.output = new float[this.outputSize, this.outputSize];
+            this.outputRaw = new float[this.outputSize, this.outputSize];
+            this.outputRawUnfolded = new float[this.outputSize * this.outputSize, 1];
+            this.gradientOutputOverRawOutput = new float[this.outputSize, this.outputSize];
+            this.gradientCostOverRawOutput = new float[this.outputSize, this.outputSize];
+            this.gradientCostOverRawOutputUnfolded = new float[this.outputSize * this.outputSize, 1];
+            this.gradientCostOverRawOutputWithPadding = new float[size + 3 - 1, size + 3 - 1];
+            this.gradientCostOverRawOutputWithPaddingUnfolded = new float[size * size, (3 * 3)];
+            this.inputUnfoldedAlt = new float[(3 * 3), this.outputSize * this.outputSize];
             this.gradientCostOverWeights = new float[3, 3];
-            this.gradientCostOverWeightsUnfolded = new float[9, 1];
+            this.gradientCostOverWeightsUnfolded = new float[(3 * 3), 1];
             this.gradientCostOverInput = new float[size, size];
             this.gradientCostOverInputUnfolded = new float[size * size, 1];
         }
 
         public float[,] FeedForward(float[,] input)
         {
-            MatrixHelper.Pad(input, this.inputWithPadding, 1);
+            MatrixHelper.Pad(input, this.inputWithPadding, this.padding);
             MatrixHelper.UnfoldConvolutionInput(this.inputWithPadding, this.inputUnfolded, 3);
-            for (var i = 0; i < this.size * this.size; ++i)
+            for (var i = 0; i < this.outputSize * this.outputSize; ++i)
             {
-                this.inputUnfolded[i, 9] = 1f;
+                this.inputUnfolded[i, (3 * 3)] = 1f;
             }
 
             MatrixHelper.UnfoldConvolutionFilter(this.filter, this.filterUnfolded);
-            this.filterUnfolded[9, 0] = this.bias;
+            this.filterUnfolded[(3 * 3), 0] = this.bias;
             MatrixHelper.Multiply(this.inputUnfolded, this.filterUnfolded, this.outputRawUnfolded);
             MatrixHelper.FoldConvolutionOutput(this.outputRawUnfolded, this.outputRaw);
-            for (var i = 0; i < this.size; ++i)
+            for (var i = 0; i < this.outputSize; ++i)
             {
-                for (var j = 0; j < this.size; ++j)
+                for (var j = 0; j < this.outputSize; ++j)
                 {
                     this.output[i, j] = ActivationHelper.Activation(this.outputRaw[i, j]);
                 }
@@ -116,9 +120,9 @@ namespace Netty.Net
         {
             // Undo activation & calculate bias gradient.
             var gradientCostOverBias = 0f;
-            for (var i = 0; i < this.size; ++i)
+            for (var i = 0; i < this.outputSize; ++i)
             {
-                for (var j = 0; j < this.size; ++j)
+                for (var j = 0; j < this.outputSize; ++j)
                 {
                     this.gradientOutputOverRawOutput[i, j] = ActivationHelper.ActivationGradient(this.outputRaw[i, j]);
                     this.gradientCostOverRawOutput[i, j] = gradientCostOverOutput[i, j] * this.gradientOutputOverRawOutput[i, j];
@@ -127,13 +131,13 @@ namespace Netty.Net
             }
 
             // Calculate filter gradient.
-            MatrixHelper.UnfoldConvolutionInput(this.inputWithPadding, this.inputUnfoldedAlt, this.size);
+            MatrixHelper.UnfoldConvolutionInput(this.inputWithPadding, this.inputUnfoldedAlt, this.outputSize);
             MatrixHelper.UnfoldConvolutionFilter(this.gradientCostOverRawOutput, this.gradientCostOverRawOutputUnfolded);
             MatrixHelper.Multiply(this.inputUnfoldedAlt, this.gradientCostOverRawOutputUnfolded, this.gradientCostOverWeightsUnfolded);
             MatrixHelper.FoldConvolutionOutput(this.gradientCostOverWeightsUnfolded, this.gradientCostOverWeights);
 
             // Calculate inputs gradient.
-            MatrixHelper.Pad(this.gradientCostOverRawOutput, this.gradientCostOverRawOutputWithPadding, 1);
+            MatrixHelper.Pad(this.gradientCostOverRawOutput, this.gradientCostOverRawOutputWithPadding, 3 - 1 - this.padding);
             MatrixHelper.Flip(this.filter, this.filterFlipped);
             MatrixHelper.UnfoldConvolutionInput(this.gradientCostOverRawOutputWithPadding, this.gradientCostOverRawOutputWithPaddingUnfolded, 3);
             MatrixHelper.UnfoldConvolutionFilter(this.filterFlipped, this.filterFlippedUnfolded);
