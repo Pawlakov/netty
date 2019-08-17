@@ -7,11 +7,13 @@
 
     public static class Program
     {
-        private const int Size = 6;
+        private const int Size = 2;
 
-        private const int KernelSize = 6;
+        private const int KernelSize = 3;
 
-        private const int Padding = 0;
+        private const int Padding = 2;
+
+        private const float LearningFactor = 1f;
 
         public static void Main(string[] args)
         {
@@ -40,7 +42,7 @@
                 var error = ErrorHelper.CalculateError(template, output);
                 var gradient = new float[output.GetLength(0), output.GetLength(1)];
                 ErrorHelper.CalculateErrorGradient(template, output, gradient);
-                layer.BackPropagate(gradient);
+                layer.BackPropagate(gradient, LearningFactor);
                 
                 Console.Clear();
                 for (var i = 0; i < template.GetLength(0); ++i)

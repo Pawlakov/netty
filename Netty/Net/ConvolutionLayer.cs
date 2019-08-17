@@ -119,7 +119,7 @@ namespace Netty.Net
             return this.output;
         }
 
-        public float[,] BackPropagate(float[,] gradientCostOverOutput)
+        public float[,] BackPropagate(float[,] gradientCostOverOutput, float learningFactor = 1f)
         {
             // Undo activation & calculate bias gradient.
             var gradientCostOverBias = 0f;
@@ -148,14 +148,14 @@ namespace Netty.Net
             MatrixHelper.FoldConvolutionOutput(this.gradientCostOverInputUnfolded, this.gradientCostOverInput);
 
             // Apply bias gradient.
-            this.bias -= gradientCostOverBias;
+            this.bias -= learningFactor * gradientCostOverBias;
 
             // Apply filter gradient.
             for (var i = 0; i < this.kernelSize; ++i)
             {
                 for (var j = 0; j < this.kernelSize; ++j)
                 {
-                    this.filter[i, j] -= this.gradientCostOverWeights[i, j];
+                    this.filter[i, j] -= learningFactor * this.gradientCostOverWeights[i, j];
                 }
             }
 
