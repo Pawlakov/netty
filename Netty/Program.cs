@@ -9,9 +9,9 @@
     {
         private const int Size = 6;
 
-        private const int Padding = 1;
+        private const int KernelSize = 6;
 
-        private const float TargetError = 0.0005f;
+        private const int Padding = 0;
 
         public static void Main(string[] args)
         {
@@ -24,34 +24,52 @@
                 }
             }
 
-            var inputUnpadded = new float[Size + 2 * (Padding - 1), Size + 2 * (Padding - 1)];
-            MatrixHelper.Pad(input, inputUnpadded, Padding - 1);
-            var layer = new ConvolutionLayer(Size, Padding);
-            var error = 1f;
-            float[,] output = null;
-            while (error >= TargetError)
+            var template = new float[Size - KernelSize + (2 * Padding) + 1, Size - KernelSize + (2 * Padding) + 1];
+            for (var i = 0; i < template.GetLength(0); ++i)
             {
-                output = layer.FeedForward(input);
-                error = ErrorHelper.CalculateError(inputUnpadded, output);
-                var gradient = new float[output.GetLength(0), output.GetLength(1)];
-                ErrorHelper.CalculateErrorGradient(inputUnpadded, output, gradient);
-                layer.BackPropagate(gradient);
+                for (var j = 0; j < template.GetLength(1); ++j)
+                {
+                    template[i, j] = 0.1f * (i + j);
+                }
             }
 
-            Console.WriteLine();
-            for (var i = 0; i < output.GetLength(0); ++i)
+            var layer = new ConvolutionLayer(Size, KernelSize, Padding);
+            while (true)
             {
-                Console.Write("[");
-                for (var j = 0; j < output.GetLength(1); ++j)
+                var output = layer.FeedForward(input);
+                var error = ErrorHelper.CalculateError(template, output);
+                var gradient = new float[output.GetLength(0), output.GetLength(1)];
+                ErrorHelper.CalculateErrorGradient(template, output, gradient);
+                layer.BackPropagate(gradient);
+                
+                Console.Clear();
+                for (var i = 0; i < template.GetLength(0); ++i)
                 {
-                    Console.Write("{0:0.0000} ", output[i, j]);
+                    Console.Write("[");
+                    for (var j = 0; j < template.GetLength(1); ++j)
+                    {
+                        Console.Write("{0:0.0000} ", template[i, j]);
+                    }
+
+                    Console.WriteLine("]");
                 }
 
-                Console.WriteLine("]");
-            }
+                Console.WriteLine();
+                for (var i = 0; i < output.GetLength(0); ++i)
+                {
+                    Console.Write("[");
+                    for (var j = 0; j < output.GetLength(1); ++j)
+                    {
+                        Console.Write("{0:0.0000} ", output[i, j]);
+                    }
 
-            Console.WriteLine();
-            Console.WriteLine("Error: {0:0.0000}", error);
+                    Console.WriteLine("]");
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("Error: {0:0.0000}", error);
+                Console.ReadKey();
+            }
         }
     }
 }
