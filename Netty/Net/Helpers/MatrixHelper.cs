@@ -138,7 +138,7 @@ namespace Netty.Net.Helpers
             }
         }
 
-        public static void UnfoldConvolutionInput(float[,] input, float[,] output, int filterDiameter)
+        public static void UnfoldConvolutionInput(float[,] input, float[,] output, int kernelHeight, int kernelWidth)
         {
             if (input == null)
             {
@@ -150,29 +150,39 @@ namespace Netty.Net.Helpers
                 throw new ArgumentNullException(nameof(output));
             }
 
-            if (filterDiameter < 1)
+            if (kernelHeight < 1)
             {
-                throw new ArgumentOutOfRangeException(nameof(filterDiameter), filterDiameter, "Filter diameter cannot be below 1.");
+                throw new ArgumentOutOfRangeException(nameof(kernelHeight), kernelHeight, "Kernel height cannot be below 1.");
+            }
+
+            if (kernelWidth < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(kernelWidth), kernelWidth, "Kernel width cannot be below 1.");
             }
 
             var firstDimension = input.GetLength(0);
             var secondDimension = input.GetLength(1);
-            if (filterDiameter > firstDimension || filterDiameter > secondDimension)
+            if (kernelHeight > firstDimension)
             {
-                throw new ArgumentOutOfRangeException(nameof(filterDiameter), filterDiameter, "Filter cannot be bigger than input.");
+                throw new ArgumentOutOfRangeException(nameof(kernelHeight), kernelHeight, "Kernel cannot be bigger than input.");
             }
 
-            if (filterDiameter * filterDiameter > output.GetLength(1) || (firstDimension - filterDiameter + 1) * (secondDimension - filterDiameter + 1) > output.GetLength(0))
+            if (kernelWidth > secondDimension)
+            {
+                throw new ArgumentOutOfRangeException(nameof(kernelWidth), kernelWidth, "Kernel cannot be bigger than input.");
+            }
+
+            if (kernelHeight * kernelWidth > output.GetLength(1) || (firstDimension - kernelHeight + 1) * (secondDimension - kernelWidth + 1) > output.GetLength(0))
             {
                 throw new MatrixException("Matrices dimensions do not support this operation.");
             }
 
-            for (var i = 0; i < (firstDimension - filterDiameter + 1) * (secondDimension - filterDiameter + 1); ++i)
+            for (var i = 0; i < (firstDimension - kernelHeight + 1) * (secondDimension - kernelWidth + 1); ++i)
             {
-                for (var j = 0; j < filterDiameter * filterDiameter; ++j)
+                for (var j = 0; j < kernelHeight * kernelWidth; ++j)
                 {
-                    var x = (i / (secondDimension - filterDiameter + 1)) + (j / filterDiameter);
-                    var y = (i % (secondDimension - filterDiameter + 1)) + (j % filterDiameter);
+                    var x = (i / (secondDimension - kernelWidth + 1)) + (j / kernelWidth);
+                    var y = (i % (secondDimension - kernelWidth + 1)) + (j % kernelWidth);
                     output[i, j] = input[x, y];
                 }
             }
@@ -190,17 +200,18 @@ namespace Netty.Net.Helpers
                 throw new ArgumentNullException(nameof(output));
             }
 
-            var filterDiameter = input.GetLength(0);
-            if (input.GetLength(1) != filterDiameter || filterDiameter * filterDiameter > output.GetLength(0))
+            var filterHeight = input.GetLength(0);
+            var filterWidth = input.GetLength(1);
+            if (filterHeight * filterWidth > output.GetLength(0))
             {
                 throw new MatrixException("Matrices dimensions do not support this operation.");
             }
 
-            for (var i = 0; i < filterDiameter; ++i)
+            for (var i = 0; i < filterHeight; ++i)
             {
-                for (var j = 0; j < filterDiameter; ++j)
+                for (var j = 0; j < filterWidth; ++j)
                 {
-                    output[(i * filterDiameter) + j, 0] = input[i, j];
+                    output[(i * filterWidth) + j, 0] = input[i, j];
                 }
             }
         }

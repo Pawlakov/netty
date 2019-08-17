@@ -7,26 +7,28 @@
 
     public static class Program
     {
-        private const int Size = 2;
+        private const int Height = 3;
+
+        private const int Width = 5;
 
         private const int KernelSize = 3;
 
-        private const int Padding = 2;
+        private const int Padding = 0;
 
         private const float LearningFactor = 1f;
 
         public static void Main(string[] args)
         {
-            var input = new float[Size, Size];
-            for (var i = 0; i < Size; ++i)
+            var input = new float[Height, Width];
+            for (var i = 0; i < Height; ++i)
             {
-                for (var j = 0; j < Size; ++j)
+                for (var j = 0; j < Width; ++j)
                 {
                     input[i, j] = 0.1f * (i + j);
                 }
             }
 
-            var template = new float[Size - KernelSize + (2 * Padding) + 1, Size - KernelSize + (2 * Padding) + 1];
+            var template = new float[Height - KernelSize + (2 * Padding) + 1, Width - KernelSize + (2 * Padding) + 1];
             for (var i = 0; i < template.GetLength(0); ++i)
             {
                 for (var j = 0; j < template.GetLength(1); ++j)
@@ -35,7 +37,7 @@
                 }
             }
 
-            var layer = new ConvolutionLayer(Size, KernelSize, Padding);
+            var layer = new ConvolutionLayer(Height, Width, KernelSize, Padding);
             while (true)
             {
                 var output = layer.FeedForward(input);
