@@ -45,7 +45,7 @@
                 var gradient = new float[output.GetLength(0), output.GetLength(1)];
                 ErrorHelper.CalculateErrorGradient(template, output, gradient);
                 layer.BackPropagate(gradient, LearningFactor);
-                
+
                 Console.Clear();
                 for (var i = 0; i < template.GetLength(0); ++i)
                 {
