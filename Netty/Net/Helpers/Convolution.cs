@@ -2,8 +2,6 @@
 {
     using System;
 
-    using Netty.Net.Exceptions;
-
     public class Convolution
     {
         private readonly int inputHeight;
@@ -26,6 +24,16 @@
 
         public Convolution(int inputHeight, int inputWidth, int kernelHeight, int kernelWidth)
         {
+            if (inputHeight < kernelHeight)
+            {
+                throw new ArgumentException("Kernel cannot be bigger than the input.", nameof(kernelHeight));
+            }
+
+            if (inputWidth < kernelWidth)
+            {
+                throw new ArgumentException("Kernel cannot be bigger than the input.", nameof(kernelWidth));
+            }
+
             this.inputHeight = inputHeight;
             this.inputWidth = inputWidth;
             this.kernelHeight = kernelHeight;
@@ -40,6 +48,36 @@
 
         public void Convolve(float[,] input, float[,] filter, float[,] output)
         {
+            if (input.GetLength(0) != this.inputHeight)
+            {
+                throw new ArgumentException("Wrong input size.", nameof(input));
+            }
+
+            if (input.GetLength(1) != this.inputWidth)
+            {
+                throw new ArgumentException("Wrong input size.", nameof(input));
+            }
+
+            if (filter.GetLength(0) != this.kernelHeight)
+            {
+                throw new ArgumentException("Wrong input size.", nameof(filter));
+            }
+
+            if (filter.GetLength(1) != this.kernelWidth)
+            {
+                throw new ArgumentException("Wrong input size.", nameof(filter));
+            }
+
+            if (output.GetLength(0) != this.outputHeight)
+            {
+                throw new ArgumentException("Wrong input size.", nameof(output));
+            }
+
+            if (output.GetLength(1) != this.outputWidth)
+            {
+                throw new ArgumentException("Wrong input size.", nameof(output));
+            }
+
             this.UnfoldConvolutionInput(input);
             this.UnfoldConvolutionFilter(filter);
             MatrixHelper.Multiply(this.inputUnfolded, this.filterUnfolded, this.outputUnfolded);

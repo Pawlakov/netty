@@ -64,11 +64,11 @@ namespace Netty.Net
             {
                 for (var j = 0; j < kernelSize; ++j)
                 {
-                    this.filter[i, j] = random.NextFloat();
+                    this.filter[i, j] = 1f;
                 }
             }
 
-            this.bias = random.NextFloat();
+            this.bias = 0f;
             this.filterFlipped = new float[kernelSize, kernelSize];
             this.inputWithPadding = new float[height + (2 * padding), width + (2 * padding)];
             this.output = new float[this.outputHeight, this.outputWidth];
@@ -78,7 +78,7 @@ namespace Netty.Net
             this.gradientCostOverRawOutputWithPadding = new float[height + kernelSize - 1, width + kernelSize - 1];
             this.gradientCostOverWeights = new float[kernelSize, kernelSize];
             this.gradientCostOverInput = new float[height, width];
-            this.feedForwardConvolution = new Convolution(height, width, kernelSize, kernelSize);
+            this.feedForwardConvolution = new Convolution(height + (2 * padding), width + (2 * padding), kernelSize, kernelSize);
             this.filterGradientConvolution = new Convolution(height + (2 * padding), width + (2 * padding), this.outputHeight, this.outputWidth);
             this.inputGradientConvolution = new Convolution(height + kernelSize - 1, width + kernelSize - 1, kernelSize, kernelSize);
         }

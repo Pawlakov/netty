@@ -7,13 +7,13 @@
 
     public static class Program
     {
-        private const int Height = 3;
+        private const int Height = 2;
 
-        private const int Width = 5;
+        private const int Width = 2;
 
-        private const int KernelSize = 3;
+        private const int KernelSize = 2;
 
-        private const int Padding = 0;
+        private const int Padding = 1;
 
         private const float LearningFactor = 1f;
 
@@ -72,7 +72,6 @@
 
                 Console.WriteLine();
                 Console.WriteLine("Error: {0:0.0000}", error);
-                Console.ReadKey();
             }
         }
     }
