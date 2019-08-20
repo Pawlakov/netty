@@ -11,7 +11,9 @@
 
         private const int Width = 2;
 
-        private const int KernelSize = 2;
+        private const int KernelHeight = 2;
+
+        private const int KernelWidth = 2;
 
         private const int Padding = 1;
 
@@ -28,7 +30,7 @@
                 }
             }
 
-            var template = new float[Height - KernelSize + (2 * Padding) + 1, Width - KernelSize + (2 * Padding) + 1];
+            var template = new float[Height - KernelHeight + (2 * Padding) + 1, Width - KernelWidth + (2 * Padding) + 1];
             for (var i = 0; i < template.GetLength(0); ++i)
             {
                 for (var j = 0; j < template.GetLength(1); ++j)
@@ -37,7 +39,7 @@
                 }
             }
 
-            var layer = new ConvolutionLayer(Height, Width, KernelSize, Padding);
+            var layer = new ConvolutionLayer(Height, Width, KernelHeight, KernelWidth, Padding);
             while (true)
             {
                 var output = layer.FeedForward(input);
@@ -72,6 +74,7 @@
 
                 Console.WriteLine();
                 Console.WriteLine("Error: {0:0.0000}", error);
+                Console.ReadKey();
             }
         }
     }

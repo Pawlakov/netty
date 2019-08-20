@@ -90,6 +90,11 @@ namespace Netty.Net.Helpers
 
         public static void Pad(float[,] input, float[,] output, int padding)
         {
+            Pad(input, output, padding, padding);
+        }
+
+        public static void Pad(float[,] input, float[,] output, int verticalPadding, int horizontalPadding)
+        {
             if (input == null)
             {
                 throw new ArgumentNullException(nameof(input));
@@ -100,40 +105,23 @@ namespace Netty.Net.Helpers
                 throw new ArgumentNullException(nameof(output));
             }
 
-            if (padding >= 0)
-            { 
-                var firstDimension = input.GetLength(0);
-                var secondDimension = input.GetLength(1);
-                if (output.GetLength(0) != firstDimension + (padding * 2)
-                    || output.GetLength(1) != secondDimension + (padding * 2))
-                {
-                    throw new MatrixException("Matrices dimensions do not support this operation.");
-                }
-
-                for (var i = 0; i < firstDimension; ++i)
-                {
-                    for (var j = 0; j < secondDimension; ++j)
-                    {
-                        output[i + padding, j + padding] = input[i, j];
-                    }
-                }
-            }
-            else
+            var firstDimension = output.GetLength(0);
+            var secondDimension = output.GetLength(1);
+            if (input.GetLength(0) != firstDimension - (verticalPadding * 2)
+                || input.GetLength(1) != secondDimension - (horizontalPadding * 2))
             {
-                padding = -padding;
-                var firstDimension = output.GetLength(0);
-                var secondDimension = output.GetLength(1);
-                if (input.GetLength(0) != firstDimension + (padding * 2) || input.GetLength(1) != secondDimension + (padding * 2))
-                {
-                    throw new MatrixException("Matrices dimensions do not support this operation.");
-                }
+                throw new MatrixException("Matrices dimensions do not support this operation.");
+            }
 
-                for (var i = 0; i < firstDimension; ++i)
+            var maxI = verticalPadding > 0 ? firstDimension - verticalPadding : firstDimension;
+            var maxJ = horizontalPadding > 0 ? secondDimension - horizontalPadding : secondDimension;
+            var i = verticalPadding > 0 ? verticalPadding : 0;
+            for (; i < maxI; ++i)
+            {
+                var j = horizontalPadding > 0 ? horizontalPadding : 0;
+                for (; j < maxJ; ++j)
                 {
-                    for (var j = 0; j < secondDimension; ++j)
-                    {
-                        output[i, j] = input[i + padding, j + padding];
-                    }
+                    output[i, j] = input[i - verticalPadding, j - horizontalPadding];
                 }
             }
         }
