@@ -7,17 +7,17 @@
 
     public static class Program
     {
-        private const int Height = 2;
+        private const int Height = 3;
 
-        private const int Width = 2;
+        private const int Width = 3;
 
-        private const int KernelHeight = 2;
+        private const int KernelHeight = 3;
 
-        private const int KernelWidth = 2;
+        private const int KernelWidth = 3;
 
         private const int Padding = 1;
 
-        private const float LearningFactor = 1f;
+        private const float LearningFactor = 0.5f;
 
         public static void Main(string[] args)
         {
@@ -39,14 +39,17 @@
                 }
             }
 
-            var layer = new ConvolutionLayer(Height, Width, KernelHeight, KernelWidth, Padding);
+            var net = new NeuralNet();
+            net.Add(new ConvolutionLayer(Height, Width, KernelHeight, KernelWidth, Padding));
+            net.Add(new BiasLayer(Height - KernelHeight + (2 * Padding) + 1, Width - KernelWidth + (2 * Padding) + 1));
+            // net.Add(new ActivationLayer(Height - KernelHeight + (2 * Padding) + 1, Width - KernelWidth + (2 * Padding) + 1));
             while (true)
             {
-                var output = layer.FeedForward(input);
+                var output = net.FeedForward(input);
                 var error = ErrorHelper.CalculateError(template, output);
                 var gradient = new float[output.GetLength(0), output.GetLength(1)];
                 ErrorHelper.CalculateErrorGradient(template, output, gradient);
-                layer.BackPropagate(gradient, LearningFactor);
+                net.BackPropagate(gradient, LearningFactor);
 
                 Console.Clear();
                 for (var i = 0; i < template.GetLength(0); ++i)

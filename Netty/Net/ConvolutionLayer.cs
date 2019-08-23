@@ -8,7 +8,7 @@ namespace Netty.Net
 {
     using Netty.Net.Helpers;
 
-    public class ConvolutionLayer
+    public class ConvolutionLayer : ILayer
     {
         private readonly int height;
 
@@ -26,21 +26,13 @@ namespace Netty.Net
 
         private readonly float[,] filter;
 
-        private float bias;
-
         private readonly float[,] filterFlipped;
 
         private readonly float[,] inputWithPadding;
 
         private readonly float[,] output;
 
-        private readonly float[,] outputRaw;
-
-        private readonly float[,] gradientOutputOverRawOutput;
-
-        private readonly float[,] gradientCostOverRawOutput;
-
-        private readonly float[,] gradientCostOverRawOutputWithPadding;
+        private readonly float[,] gradientCostOverOutputWithPadding;
 
         private readonly float[,] gradientCostOverWeights;
 
@@ -67,18 +59,14 @@ namespace Netty.Net
             {
                 for (var j = 0; j < kernelWidth; ++j)
                 {
-                    this.filter[i, j] = 1f;
+                    this.filter[i, j] = random.NextFloat();
                 }
             }
 
-            this.bias = 0f;
             this.filterFlipped = new float[kernelHeight, kernelWidth];
             this.inputWithPadding = new float[height + (2 * padding), width + (2 * padding)];
             this.output = new float[this.outputHeight, this.outputWidth];
-            this.outputRaw = new float[this.outputHeight, this.outputWidth];
-            this.gradientOutputOverRawOutput = new float[this.outputHeight, this.outputWidth];
-            this.gradientCostOverRawOutput = new float[this.outputHeight, this.outputWidth];
-            this.gradientCostOverRawOutputWithPadding = new float[height + kernelHeight - 1, width + kernelWidth - 1];
+            this.gradientCostOverOutputWithPadding = new float[height + kernelHeight - 1, width + kernelWidth - 1];
             this.gradientCostOverWeights = new float[kernelHeight, kernelWidth];
             this.gradientCostOverInput = new float[height, width];
             this.feedForwardConvolution = new Convolution(height + (2 * padding), width + (2 * padding), kernelHeight, kernelWidth);
@@ -89,43 +77,19 @@ namespace Netty.Net
         public float[,] FeedForward(float[,] input)
         {
             MatrixHelper.Pad(input, this.inputWithPadding, this.padding);
-            this.feedForwardConvolution.Convolve(this.inputWithPadding, this.filter, this.outputRaw);
-            for (var i = 0; i < this.outputHeight; ++i)
-            {
-                for (var j = 0; j < this.outputWidth; ++j)
-                {
-                    this.outputRaw[i, j] += this.bias;
-                    this.output[i, j] = ActivationHelper.Activation(this.outputRaw[i, j]);
-                }
-            }
-
+            this.feedForwardConvolution.Convolve(this.inputWithPadding, this.filter, this.output);
             return this.output;
         }
 
         public float[,] BackPropagate(float[,] gradientCostOverOutput, float learningFactor = 1f)
         {
-            // Undo activation & calculate bias gradient.
-            var gradientCostOverBias = 0f;
-            for (var i = 0; i < this.outputHeight; ++i)
-            {
-                for (var j = 0; j < this.outputWidth; ++j)
-                {
-                    this.gradientOutputOverRawOutput[i, j] = ActivationHelper.ActivationGradient(this.outputRaw[i, j]);
-                    this.gradientCostOverRawOutput[i, j] = gradientCostOverOutput[i, j] * this.gradientOutputOverRawOutput[i, j];
-                    gradientCostOverBias += this.gradientCostOverRawOutput[i, j];
-                }
-            }
-
             // Calculate filter gradient.
-            this.filterGradientConvolution.Convolve(this.inputWithPadding, this.gradientCostOverRawOutput, this.gradientCostOverWeights);
+            this.filterGradientConvolution.Convolve(this.inputWithPadding, gradientCostOverOutput, this.gradientCostOverWeights);
 
             // Calculate inputs gradient.
-            MatrixHelper.Pad(this.gradientCostOverRawOutput, this.gradientCostOverRawOutputWithPadding, this.kernelHeight - 1 - this.padding, this.kernelHeight - 1 - this.padding);
+            MatrixHelper.Pad(gradientCostOverOutput, this.gradientCostOverOutputWithPadding, this.kernelHeight - 1 - this.padding, this.kernelHeight - 1 - this.padding);
             MatrixHelper.Flip(this.filter, this.filterFlipped);
-            this.inputGradientConvolution.Convolve(this.gradientCostOverRawOutputWithPadding, this.filterFlipped, this.gradientCostOverInput);
-
-            // Apply bias gradient.
-            this.bias -= learningFactor * gradientCostOverBias;
+            this.inputGradientConvolution.Convolve(this.gradientCostOverOutputWithPadding, this.filterFlipped, this.gradientCostOverInput);
 
             // Apply filter gradient.
             for (var i = 0; i < this.kernelHeight; ++i)
