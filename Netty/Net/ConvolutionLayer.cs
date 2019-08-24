@@ -8,6 +8,9 @@ namespace Netty.Net
 {
     using Netty.Net.Helpers;
 
+    /// <summary>
+    /// The sequential model layer that performs a convolution on its input.
+    /// </summary>
     public class ConvolutionLayer : ILayer
     {
         private readonly int height;
@@ -23,6 +26,8 @@ namespace Netty.Net
         private readonly int outputHeight;
 
         private readonly int outputWidth;
+
+        private float bias;
 
         private readonly float[,] filter;
 
@@ -54,6 +59,7 @@ namespace Netty.Net
             this.padding = padding;
             this.outputHeight = height - kernelHeight + 1 + (2 * padding);
             this.outputWidth = width - kernelWidth + 1 + (2 * padding);
+            this.bias = 0f;
             this.filter = new float[kernelHeight, kernelWidth];
             for (var i = 0; i < kernelHeight; ++i)
             {
@@ -76,13 +82,32 @@ namespace Netty.Net
 
         public float[,] FeedForward(float[,] input)
         {
-            MatrixHelper.Pad(input, this.inputWithPadding, this.padding);
+            MatrixHelper.Pad(input, this.inputWithPadding, this.padding, this.padding);
             this.feedForwardConvolution.Convolve(this.inputWithPadding, this.filter, this.output);
+            for (var i = 0; i < this.height; ++i)
+            {
+                for (var j = 0; j < this.width; ++j)
+                {
+                    this.output[i, j] = this.output[i, j] + this.bias;
+                }
+            }
+
             return this.output;
         }
 
         public float[,] BackPropagate(float[,] gradientCostOverOutput, float learningFactor = 1f)
         {
+            // Calculate bias and input gradient.
+            var gradientCostOverBias = 0f;
+            for (var i = 0; i < this.height; ++i)
+            {
+                for (var j = 0; j < this.width; ++j)
+                {
+                    this.gradientCostOverInput[i, j] = gradientCostOverOutput[i, j];
+                    gradientCostOverBias += gradientCostOverOutput[i, j];
+                }
+            }
+
             // Calculate filter gradient.
             this.filterGradientConvolution.Convolve(this.inputWithPadding, gradientCostOverOutput, this.gradientCostOverWeights);
 
@@ -90,6 +115,9 @@ namespace Netty.Net
             MatrixHelper.Pad(gradientCostOverOutput, this.gradientCostOverOutputWithPadding, this.kernelHeight - 1 - this.padding, this.kernelHeight - 1 - this.padding);
             MatrixHelper.Flip(this.filter, this.filterFlipped);
             this.inputGradientConvolution.Convolve(this.gradientCostOverOutputWithPadding, this.filterFlipped, this.gradientCostOverInput);
+
+            // Apply bias gradient.
+            this.bias -= learningFactor * gradientCostOverBias;
 
             // Apply filter gradient.
             for (var i = 0; i < this.kernelHeight; ++i)

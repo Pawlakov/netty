@@ -88,11 +88,27 @@ namespace Netty.Net.Helpers
             }
         }
 
-        public static void Pad(float[,] input, float[,] output, int padding)
-        {
-            Pad(input, output, padding, padding);
-        }
-
+        /// <summary>
+        /// Adds padding to the the matrix. Removes when negative amount is given.
+        /// </summary>
+        /// <param name="input">
+        /// Input matrix.
+        /// </param>
+        /// <param name="output">
+        /// Output matrix.
+        /// </param>
+        /// <param name="verticalPadding">
+        /// The amount of padding along vertical edges.
+        /// </param>
+        /// <param name="horizontalPadding">
+        /// The amount of padding along horizontal edges.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when one of matrices is null.
+        /// </exception>
+        /// <exception cref="MatrixException">
+        /// Thrown when matrices dimensions do not support this operation.
+        /// </exception>
         public static void Pad(float[,] input, float[,] output, int verticalPadding, int horizontalPadding)
         {
             if (input == null)
@@ -126,6 +142,21 @@ namespace Netty.Net.Helpers
             }
         }
 
+        /// <summary>
+        /// Flips the matrix horizontally and vertically.
+        /// </summary>
+        /// <param name="input">
+        /// Input matrix.
+        /// </param>
+        /// <param name="output">
+        /// Output matrix.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when one of matrices is null.
+        /// </exception>
+        /// <exception cref="MatrixException">
+        /// Thrown when matrices dimensions do not support this operation.
+        /// </exception>
         public static void Flip(float[,] input, float[,] output)
         {
             if (input == null)

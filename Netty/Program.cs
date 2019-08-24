@@ -17,7 +17,7 @@
 
         private const int Padding = 1;
 
-        private const float LearningFactor = 0.5f;
+        private const float LearningFactor = 0.1f;
 
         public static void Main(string[] args)
         {
@@ -39,46 +39,45 @@
                 }
             }
 
+            float[,] output = null;
             var net = new NeuralNet();
             net.Add(new ConvolutionLayer(Height, Width, KernelHeight, KernelWidth, Padding));
-            net.Add(new BiasLayer(Height - KernelHeight + (2 * Padding) + 1, Width - KernelWidth + (2 * Padding) + 1));
-            // net.Add(new ActivationLayer(Height - KernelHeight + (2 * Padding) + 1, Width - KernelWidth + (2 * Padding) + 1));
-            while (true)
+            net.Add(new ActivationLayer(Height - KernelHeight + (2 * Padding) + 1, Width - KernelWidth + (2 * Padding) + 1));
+            for (var epoch = 0; epoch < 1000000; ++epoch)
             {
-                var output = net.FeedForward(input);
-                var error = ErrorHelper.CalculateError(template, output);
+                output = net.FeedForward(input);
                 var gradient = new float[output.GetLength(0), output.GetLength(1)];
                 ErrorHelper.CalculateErrorGradient(template, output, gradient);
                 net.BackPropagate(gradient, LearningFactor);
-
-                Console.Clear();
-                for (var i = 0; i < template.GetLength(0); ++i)
-                {
-                    Console.Write("[");
-                    for (var j = 0; j < template.GetLength(1); ++j)
-                    {
-                        Console.Write("{0:0.0000} ", template[i, j]);
-                    }
-
-                    Console.WriteLine("]");
-                }
-
-                Console.WriteLine();
-                for (var i = 0; i < output.GetLength(0); ++i)
-                {
-                    Console.Write("[");
-                    for (var j = 0; j < output.GetLength(1); ++j)
-                    {
-                        Console.Write("{0:0.0000} ", output[i, j]);
-                    }
-
-                    Console.WriteLine("]");
-                }
-
-                Console.WriteLine();
-                Console.WriteLine("Error: {0:0.0000}", error);
-                Console.ReadKey();
             }
+
+            Console.Clear();
+            var error = ErrorHelper.CalculateError(template, output);
+            for (var i = 0; i < template.GetLength(0); ++i)
+            {
+                Console.Write("[");
+                for (var j = 0; j < template.GetLength(1); ++j)
+                {
+                    Console.Write("{0:0.0000} ", template[i, j]);
+                }
+
+                Console.WriteLine("]");
+            }
+
+            Console.WriteLine();
+            for (var i = 0; i < output.GetLength(0); ++i)
+            {
+                Console.Write("[");
+                for (var j = 0; j < output.GetLength(1); ++j)
+                {
+                    Console.Write("{0:0.0000} ", output[i, j]);
+                }
+
+                Console.WriteLine("]");
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Error: {0:0.0000}", error);
         }
     }
 }

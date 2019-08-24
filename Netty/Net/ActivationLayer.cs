@@ -1,7 +1,16 @@
-﻿namespace Netty.Net
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="ActivationLayer.cs" company="Paweł Matusek">
+//   Copyright (c) Paweł Matusek. All rights reserved.
+// </copyright>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Netty.Net
 {
     using Netty.Net.Helpers;
 
+    /// <summary>
+    /// The sequential model layer that transforms the input with an activation function.
+    /// </summary>
     public class ActivationLayer : ILayer
     {
         private readonly int height;
