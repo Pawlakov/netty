@@ -17,7 +17,7 @@
 
         private const int Padding = 1;
 
-        private const float LearningFactor = 0.1f;
+        private const float LearningFactor = 0.01f;
 
         public static void Main(string[] args)
         {
@@ -26,23 +26,23 @@
             {
                 for (var j = 0; j < Width; ++j)
                 {
-                    input[0, i, j] = 0.1f * (i + j);
+                    input[0, i, j] = 0.1f * i;
                 }
             }
 
             var template = new float[1, Height - KernelHeight + (2 * Padding) + 1, Width - KernelWidth + (2 * Padding) + 1];
-            for (var i = 0; i < template.GetLength(0); ++i)
+            for (var i = 0; i < template.GetLength(1); ++i)
             {
-                for (var j = 0; j < template.GetLength(1); ++j)
+                for (var j = 0; j < template.GetLength(2); ++j)
                 {
-                    template[0, i, j] = 0.1f * (i + j);
+                    template[0, i, j] = 0.1f * i;
                 }
             }
 
             float[,,] output = null;
             var net = new NeuralNet();
             net.Add(new ConvolutionLayer(Height, Width, KernelHeight, KernelWidth, Padding));
-            net.Add(new ActivationLayer(Height - KernelHeight + (2 * Padding) + 1, Width - KernelWidth + (2 * Padding) + 1));
+            //net.Add(new ActivationLayer(Height - KernelHeight + (2 * Padding) + 1, Width - KernelWidth + (2 * Padding) + 1));
             while (true)
             {
                 output = net.FeedForward(input);

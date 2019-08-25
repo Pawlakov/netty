@@ -113,7 +113,7 @@ namespace Netty.Net.Helpers
                 throw new MatrixException("The dimensions of these matrices do not align.");
             }
 
-            var n = firstDimension * secondDimension;
+            var n = firstDimension * secondDimension * thirdDimension;
             for (var i = 0; i < firstDimension; ++i)
             {
                 for (var j = 0; j < secondDimension; ++j)
