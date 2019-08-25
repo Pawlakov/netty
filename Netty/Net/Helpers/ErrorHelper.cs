@@ -120,7 +120,7 @@ namespace Netty.Net.Helpers
                 {
                     for (var k = 0; k < thirdDimension; ++k)
                     {
-                        gradient[i, j, k] = (-2f / n) * (template[i, j, k] - subject[i, j, k]);
+                        gradient[i, j, k] = (2f / n) * (subject[i, j, k] - template[i, j, k]);
                     }
                 }
             }

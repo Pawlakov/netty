@@ -71,7 +71,7 @@ namespace Netty.Net
                     {
                         for (var l = 0; l < kernelWidth; ++l)
                         {
-                            this.filter[i, j, k, l] = l * 0.1f;
+                            this.filter[i, j, k, l] = random.NextFloat();
                         }
                     }
                 }
@@ -126,7 +126,7 @@ namespace Netty.Net
             // Calculate filter gradient.
             this.filterGradientConvolution.Convolve(
                 this.inputWithPadding,
-                this.gradientCostOverInput,
+                gradientCostOverOutput,
                 this.gradientCostOverWeights);
 
             // Calculate inputs gradient.
