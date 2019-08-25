@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="Convolution.cs" company="Paweł Matusek">
+// <copyright file="MonoChannelConvolution.cs" company="Paweł Matusek">
 //   Copyright (c) Paweł Matusek. All rights reserved.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
@@ -11,7 +11,7 @@ namespace Netty.Net.Helpers
     /// <summary>
     /// Encapsulates the operation of convolution by matrix multiplication.
     /// </summary>
-    public class Convolution
+    public class MonoChannelConvolution
     {
         /// <summary>
         /// The input height.
@@ -59,7 +59,7 @@ namespace Netty.Net.Helpers
         private readonly float[,] outputUnfolded;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Convolution"/> class.
+        /// Initializes a new instance of the <see cref="MonoChannelConvolution"/> class.
         /// </summary>
         /// <param name="inputHeight">
         /// The input height.
@@ -76,7 +76,7 @@ namespace Netty.Net.Helpers
         /// <exception cref="ArgumentException">
         /// Thrown when the kernel is bigger than the input.
         /// </exception>
-        public Convolution(int inputHeight, int inputWidth, int kernelHeight, int kernelWidth)
+        public MonoChannelConvolution(int inputHeight, int inputWidth, int kernelHeight, int kernelWidth)
         {
             if (inputHeight < kernelHeight)
             {

@@ -20,7 +20,7 @@ namespace Netty.Net
         /// <returns>
         /// The output matrix.
         /// </returns>
-        float[,] FeedForward(float[,] input);
+        float[,,] FeedForward(float[,,] input);
 
         /// <summary>
         /// Back-propagates the gradient of cost.
@@ -34,6 +34,6 @@ namespace Netty.Net
         /// <returns>
         /// The gradient of cost over this layer's input.
         /// </returns>
-        float[,] BackPropagate(float[,] gradientCostOverOutput, float learningFactor = 1f);
+        float[,,] BackPropagate(float[,,] gradientCostOverOutput, float learningFactor = 1f);
     }
 }

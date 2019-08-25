@@ -33,7 +33,7 @@ namespace Netty.Net.Helpers
         /// <exception cref="MatrixException">
         /// Thrown when the dimensions of the matrices do not align.
         /// </exception>
-        public static float CalculateError(float[,] template, float[,] subject)
+        public static float CalculateError(float[,,] template, float[,,] subject)
         {
             if (template == null)
             {
@@ -47,19 +47,23 @@ namespace Netty.Net.Helpers
 
             var firstDimension = template.GetLength(0);
             var secondDimension = template.GetLength(1);
-            if (firstDimension != subject.GetLength(0) || secondDimension != subject.GetLength(1))
+            var thirdDimension = template.GetLength(2);
+            if (firstDimension != subject.GetLength(0) || secondDimension != subject.GetLength(1) || thirdDimension != subject.GetLength(2))
             {
                 throw new MatrixException("The dimensions of these matrices do not align.");
             }
 
             var sum = 0f;
-            var n = firstDimension * secondDimension;
+            var n = firstDimension * secondDimension * thirdDimension;
             for (var i = 0; i < firstDimension; ++i)
             {
                 for (var j = 0; j < secondDimension; ++j)
                 {
-                    var difference = template[i, j] - subject[i, j];
-                    sum += difference * difference;
+                    for (var k = 0; k < thirdDimension; ++k)
+                    {
+                        var difference = template[i, j, k] - subject[i, j, k];
+                        sum += difference * difference;
+                    }
                 }
             }
 
@@ -84,7 +88,7 @@ namespace Netty.Net.Helpers
         /// <exception cref="MatrixException">
         /// Thrown when the dimensions of the matrices do not align.
         /// </exception>
-        public static void CalculateErrorGradient(float[,] template, float[,] subject, float[,] gradient)
+        public static void CalculateErrorGradient(float[,,] template, float[,,] subject, float[,,] gradient)
         {
             if (template == null)
             {
@@ -103,7 +107,8 @@ namespace Netty.Net.Helpers
 
             var firstDimension = template.GetLength(0);
             var secondDimension = template.GetLength(1);
-            if (firstDimension != subject.GetLength(0) || secondDimension != subject.GetLength(1) || firstDimension != gradient.GetLength(0) || secondDimension != gradient.GetLength(1))
+            var thirdDimension = template.GetLength(2);
+            if (firstDimension != subject.GetLength(0) || secondDimension != subject.GetLength(1) || thirdDimension != subject.GetLength(2) || firstDimension != gradient.GetLength(0) || secondDimension != gradient.GetLength(1) || thirdDimension != gradient.GetLength(2))
             {
                 throw new MatrixException("The dimensions of these matrices do not align.");
             }
@@ -113,7 +118,10 @@ namespace Netty.Net.Helpers
             {
                 for (var j = 0; j < secondDimension; ++j)
                 {
-                    gradient[i, j] = (-2f / n) * (template[i, j] - subject[i, j]);
+                    for (var k = 0; k < thirdDimension; ++k)
+                    {
+                        gradient[i, j, k] = (-2f / n) * (template[i, j, k] - subject[i, j, k]);
+                    }
                 }
             }
         }

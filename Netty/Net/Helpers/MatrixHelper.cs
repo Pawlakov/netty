@@ -109,7 +109,7 @@ namespace Netty.Net.Helpers
         /// <exception cref="MatrixException">
         /// Thrown when matrices dimensions do not support this operation.
         /// </exception>
-        public static void Pad(float[,] input, float[,] output, int verticalPadding, int horizontalPadding)
+        public static void Pad(float[,,] input, float[,,] output, int verticalPadding, int horizontalPadding)
         {
             if (input == null)
             {
@@ -121,23 +121,28 @@ namespace Netty.Net.Helpers
                 throw new ArgumentNullException(nameof(output));
             }
 
-            var firstDimension = output.GetLength(0);
-            var secondDimension = output.GetLength(1);
-            if (input.GetLength(0) != firstDimension - (verticalPadding * 2)
-                || input.GetLength(1) != secondDimension - (horizontalPadding * 2))
+            var depth = output.GetLength(0);
+            var height = output.GetLength(1);
+            var width = output.GetLength(2);
+            if (input.GetLength(0) != depth
+                || input.GetLength(1) != height - (verticalPadding * 2)
+                || input.GetLength(2) != width - (horizontalPadding * 2))
             {
                 throw new MatrixException("Matrices dimensions do not support this operation.");
             }
 
-            var maxI = verticalPadding > 0 ? firstDimension - verticalPadding : firstDimension;
-            var maxJ = horizontalPadding > 0 ? secondDimension - horizontalPadding : secondDimension;
-            var i = verticalPadding > 0 ? verticalPadding : 0;
-            for (; i < maxI; ++i)
+            var maxJ = verticalPadding > 0 ? height - verticalPadding : height;
+            var maxK = horizontalPadding > 0 ? width - horizontalPadding : width;
+            for (var i = 0; i < depth; ++i)
             {
-                var j = horizontalPadding > 0 ? horizontalPadding : 0;
+                var j = verticalPadding > 0 ? verticalPadding : 0;
                 for (; j < maxJ; ++j)
                 {
-                    output[i, j] = input[i - verticalPadding, j - horizontalPadding];
+                    var k = horizontalPadding > 0 ? horizontalPadding : 0;
+                    for (; k < maxK; ++k)
+                    {
+                        output[i, j, k] = input[i, j - verticalPadding, k - horizontalPadding];
+                    }
                 }
             }
         }
@@ -157,7 +162,7 @@ namespace Netty.Net.Helpers
         /// <exception cref="MatrixException">
         /// Thrown when matrices dimensions do not support this operation.
         /// </exception>
-        public static void Flip(float[,] input, float[,] output)
+        public static void Flip(float[,,,] input, float[,,,] output)
         {
             if (input == null)
             {
@@ -169,18 +174,26 @@ namespace Netty.Net.Helpers
                 throw new ArgumentNullException(nameof(output));
             }
 
-            var firstDimension = input.GetLength(0);
-            var secondDimension = input.GetLength(1);
-            if (output.GetLength(0) != firstDimension || output.GetLength(1) != secondDimension)
+            var count = input.GetLength(0);
+            var depth = input.GetLength(1);
+            var height = input.GetLength(2);
+            var width = input.GetLength(3);
+            if (output.GetLength(0) != count || output.GetLength(1) != depth || output.GetLength(2) != height || output.GetLength(3) != width)
             {
                 throw new MatrixException("Matrices dimensions do not support this operation.");
             }
 
-            for (var i = 0; i < firstDimension; ++i)
+            for (var i = 0; i < count; ++i)
             {
-                for (var j = 0; j < secondDimension; ++j)
+                for (var j = 0; j < depth; ++j)
                 {
-                    output[firstDimension - i - 1, secondDimension - j - 1] = input[i, j];
+                    for (var k = 0; k < height; ++k)
+                    {
+                        for (var l = 0; l < width; ++l)
+                        {
+                            output[i, j, height - k - 1, width - l - 1] = input[i, j, k, l];
+                        }
+                    }
                 }
             }
         }

@@ -27,27 +27,35 @@ namespace Netty.Net
 
         private readonly int outputWidth;
 
-        private float bias;
+        private readonly float[] bias;
 
-        private readonly float[,] filter;
+        private readonly float[,,,] filter;
 
-        private readonly float[,] filterFlipped;
+        private readonly float[,,,] filterFlipped;
 
-        private readonly float[,] inputWithPadding;
+        private readonly float[,,] inputWithPadding;
 
-        private readonly float[,] output;
+        private readonly float[,,] output;
 
-        private readonly float[,] gradientCostOverOutputWithPadding;
+        private readonly float[] gradientCostOverBias;
 
-        private readonly float[,] gradientCostOverWeights;
+        private readonly float[,,] gradientCostOverOutputWithPadding;
 
-        private readonly float[,] gradientCostOverInput;
+        private readonly float[,,,] gradientCostOverWeights;
 
-        private readonly Convolution feedForwardConvolution;
+        private readonly float[,,] gradientCostOverInput;
 
-        private readonly Convolution filterGradientConvolution;
+        private readonly float[][,] inputWithPaddingJagged;
 
-        private readonly Convolution inputGradientConvolution;
+        private readonly float[][,] gradientCostOverOutputJagged;
+
+        private readonly float[,][,] gradientCostOverWeightsJagged;
+
+        private readonly MultiChannelConvolution feedForwardConvolution;
+
+        private readonly MonoChannelConvolution filterGradientConvolution;
+
+        private readonly MultiChannelConvolution inputGradientConvolution;
 
         public ConvolutionLayer(int height, int width, int kernelHeight, int kernelWidth, int padding)
         {
@@ -59,57 +67,128 @@ namespace Netty.Net
             this.padding = padding;
             this.outputHeight = height - kernelHeight + 1 + (2 * padding);
             this.outputWidth = width - kernelWidth + 1 + (2 * padding);
-            this.bias = 0f;
-            this.filter = new float[kernelHeight, kernelWidth];
-            for (var i = 0; i < kernelHeight; ++i)
+            this.bias = new float[1];
+            this.filter = new float[1, 1, kernelHeight, kernelWidth];
+            for (var i = 0; i < 1; ++i)
             {
-                for (var j = 0; j < kernelWidth; ++j)
+                for (var j = 0; j < 1; ++j)
                 {
-                    this.filter[i, j] = random.NextFloat();
+                    for (var k = 0; k < kernelHeight; ++k)
+                    {
+                        for (var l = 0; l < kernelWidth; ++l)
+                        {
+                            this.filter[i, j, k, l] = random.NextFloat();
+                        }
+                    }
                 }
             }
 
-            this.filterFlipped = new float[kernelHeight, kernelWidth];
-            this.inputWithPadding = new float[height + (2 * padding), width + (2 * padding)];
-            this.output = new float[this.outputHeight, this.outputWidth];
-            this.gradientCostOverOutputWithPadding = new float[height + kernelHeight - 1, width + kernelWidth - 1];
-            this.gradientCostOverWeights = new float[kernelHeight, kernelWidth];
-            this.gradientCostOverInput = new float[height, width];
-            this.feedForwardConvolution = new Convolution(height + (2 * padding), width + (2 * padding), kernelHeight, kernelWidth);
-            this.filterGradientConvolution = new Convolution(height + (2 * padding), width + (2 * padding), this.outputHeight, this.outputWidth);
-            this.inputGradientConvolution = new Convolution(height + kernelHeight - 1, width + kernelWidth - 1, kernelHeight, kernelWidth);
+            this.filterFlipped = new float[1, 1, kernelHeight, kernelWidth];
+            this.inputWithPadding = new float[1, height + (2 * padding), width + (2 * padding)];
+            this.output = new float[1, this.outputHeight, this.outputWidth];
+            this.gradientCostOverBias = new float[1];
+            this.gradientCostOverOutputWithPadding = new float[1, height + kernelHeight - 1, width + kernelWidth - 1];
+            this.gradientCostOverWeights = new float[1, 1, kernelHeight, kernelWidth];
+            this.gradientCostOverInput = new float[1, height, width];
+            this.inputWithPaddingJagged = new float[1][,];
+            this.gradientCostOverOutputJagged = new float[1][,];
+            this.gradientCostOverWeightsJagged = new float[1, 1][,];
+            for (var i = 0; i < 1; ++i)
+            {
+                this.inputWithPaddingJagged[i] = new float[this.height + (2 * this.padding), this.width + (2 * this.padding)];
+                for (var j = 0; j < 1; ++j)
+                {
+                    this.gradientCostOverWeightsJagged[i, j] = new float[this.kernelHeight, this.kernelWidth];
+                }
+            }
+
+            for (var i = 0; i < 1; ++i)
+            {
+                this.gradientCostOverOutputJagged[i] = new float[this.outputHeight, this.outputWidth];
+            }
+
+            this.feedForwardConvolution = new MultiChannelConvolution(1, height + (2 * padding), width + (2 * padding), 1, kernelHeight, kernelWidth);
+            this.filterGradientConvolution = new MonoChannelConvolution(height + (2 * padding), width + (2 * padding), this.outputHeight, this.outputWidth);
+            this.inputGradientConvolution = new MultiChannelConvolution(1, height + kernelHeight - 1, width + kernelWidth - 1, 1, kernelHeight, kernelWidth);
         }
 
-        public float[,] FeedForward(float[,] input)
+        public float[,,] FeedForward(float[,,] input)
         {
             MatrixHelper.Pad(input, this.inputWithPadding, this.padding, this.padding);
             this.feedForwardConvolution.Convolve(this.inputWithPadding, this.filter, this.output);
-            for (var i = 0; i < this.height; ++i)
+            for (var i = 0; i < 1; ++i)
             {
-                for (var j = 0; j < this.width; ++j)
+                for (var j = 0; j < this.height; ++j)
                 {
-                    this.output[i, j] = this.output[i, j] + this.bias;
+                    for (var k = 0; k < this.width; ++k)
+                    {
+                        this.output[i, j, k] = this.output[i, j, k] + this.bias[i];
+                    }
                 }
             }
 
             return this.output;
         }
 
-        public float[,] BackPropagate(float[,] gradientCostOverOutput, float learningFactor = 1f)
+        public float[,,] BackPropagate(float[,,] gradientCostOverOutput, float learningFactor = 1f)
         {
-            // Calculate bias and input gradient.
-            var gradientCostOverBias = 0f;
-            for (var i = 0; i < this.height; ++i)
+            // Calculate bias gradient.
+            for (var i = 0; i < 1; ++i)
             {
-                for (var j = 0; j < this.width; ++j)
+                this.gradientCostOverBias[i] = 0f;
+                for (var j = 0; j < this.height; ++j)
                 {
-                    this.gradientCostOverInput[i, j] = gradientCostOverOutput[i, j];
-                    gradientCostOverBias += gradientCostOverOutput[i, j];
+                    for (var k = 0; k < this.width; ++k)
+                    {
+                        this.gradientCostOverBias[i] += gradientCostOverOutput[i, j, k];
+                    }
                 }
             }
 
             // Calculate filter gradient.
-            this.filterGradientConvolution.Convolve(this.inputWithPadding, gradientCostOverOutput, this.gradientCostOverWeights);
+            for (var i = 0; i < 1; ++i)
+            {
+                for (var j = 0; j < this.height + (2 * this.padding); ++j)
+                {
+                    for (var k = 0; k < this.width + (2 * this.padding); ++k)
+                    {
+                        this.inputWithPaddingJagged[i][j, k] = this.inputWithPadding[i, j, k];
+                    }
+                }
+
+                for (var j = 0; j < 1; ++j)
+                {
+                    for (var k = 0; k < this.kernelHeight; ++k)
+                    {
+                        for (var l = 0; l < this.kernelWidth; ++l)
+                        {
+                            this.gradientCostOverWeightsJagged[i, j][k, l] = this.gradientCostOverWeights[i, j, k, l];
+                        }
+                    }
+                }
+            }
+
+            for (var i = 0; i < 1; ++i)
+            {
+                for (var j = 0; j < this.outputHeight; ++j)
+                {
+                    for (var k = 0; k < this.outputWidth; ++k)
+                    {
+                        this.gradientCostOverOutputJagged[i][j, k] = gradientCostOverOutput[i, j, k];
+                    }
+                }
+            }
+
+            for (var i = 0; i < 1; ++i)
+            {
+                for (var j = 0; j < 1; ++j)
+                {
+                    this.filterGradientConvolution.Convolve(
+                        this.inputWithPaddingJagged[j],
+                        this.gradientCostOverOutputJagged[i],
+                        this.gradientCostOverWeightsJagged[i, j]);
+                }
+            }
 
             // Calculate inputs gradient.
             MatrixHelper.Pad(gradientCostOverOutput, this.gradientCostOverOutputWithPadding, this.kernelHeight - 1 - this.padding, this.kernelHeight - 1 - this.padding);
@@ -117,14 +196,23 @@ namespace Netty.Net
             this.inputGradientConvolution.Convolve(this.gradientCostOverOutputWithPadding, this.filterFlipped, this.gradientCostOverInput);
 
             // Apply bias gradient.
-            this.bias -= learningFactor * gradientCostOverBias;
+            for (var i = 0; i < 1; ++i)
+            {
+                this.bias[i] -= learningFactor * this.gradientCostOverBias[i];
+            }
 
             // Apply filter gradient.
-            for (var i = 0; i < this.kernelHeight; ++i)
+            for (var i = 0; i < 1; ++i)
             {
-                for (var j = 0; j < this.kernelWidth; ++j)
+                for (var j = 0; j < 1; ++j)
                 {
-                    this.filter[i, j] -= learningFactor * this.gradientCostOverWeights[i, j];
+                    for (var k = 0; k < this.kernelHeight; ++k)
+                    {
+                        for (var l = 0; l < this.kernelWidth; ++l)
+                        {
+                            this.filter[i, j, k, l] -= learningFactor * this.gradientCostOverWeights[i, j, k, l];
+                        }
+                    }
                 }
             }
 
