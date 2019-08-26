@@ -178,7 +178,7 @@ namespace Netty.Net.Helpers
             var depth = input.GetLength(1);
             var height = input.GetLength(2);
             var width = input.GetLength(3);
-            if (output.GetLength(0) != count || output.GetLength(1) != depth || output.GetLength(2) != height || output.GetLength(3) != width)
+            if (output.GetLength(1) != count || output.GetLength(0) != depth || output.GetLength(2) != height || output.GetLength(3) != width)
             {
                 throw new MatrixException("Matrices dimensions do not support this operation.");
             }
@@ -191,7 +191,7 @@ namespace Netty.Net.Helpers
                     {
                         for (var l = 0; l < width; ++l)
                         {
-                            output[i, j, height - k - 1, width - l - 1] = input[i, j, k, l];
+                            output[j, i, height - k - 1, width - l - 1] = input[i, j, k, l];
                         }
                     }
                 }

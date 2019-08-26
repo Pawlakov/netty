@@ -39,21 +39,21 @@
             this.outputHeight = inputHeight - kernelHeight + 1;
             this.outputWidth = inputWidth - kernelWidth + 1;
 
-            this.inputJagged = new float[filterCount][,];
-            this.filterJagged = new float[inputDepth][,];
-            this.outputJagged = new float[inputDepth, filterCount][,];
-            for (var i = 0; i < 1; ++i)
+            this.inputJagged = new float[inputDepth][,];
+            this.filterJagged = new float[filterCount][,];
+            this.outputJagged = new float[filterCount, inputDepth][,];
+            for (var i = 0; i < filterCount; ++i)
             {
-                this.inputJagged[i] = new float[inputHeight, inputWidth];
-                for (var j = 0; j < 1; ++j)
+                this.filterJagged[i] = new float[kernelHeight, kernelWidth];
+                for (var j = 0; j < inputDepth; ++j)
                 {
-                    this.outputJagged[i, j] = new float[kernelHeight, kernelWidth];
+                    this.outputJagged[i, j] = new float[this.outputHeight, this.outputWidth];
                 }
             }
 
-            for (var i = 0; i < 1; ++i)
+            for (var i = 0; i < inputDepth; ++i)
             {
-                this.filterJagged[i] = new float[this.outputHeight, this.outputWidth];
+                this.inputJagged[i] = new float[inputHeight, inputWidth];
             }
 
             this.convolution = new MonoChannelConvolution(inputHeight, inputWidth, kernelHeight, kernelWidth);
@@ -89,9 +89,9 @@
 
             for (var i = 0; i < this.filterCount; ++i)
             {
-                for (var j = 0; j < this.outputHeight; ++j)
+                for (var j = 0; j < this.kernelHeight; ++j)
                 {
-                    for (var k = 0; k < this.outputWidth; ++k)
+                    for (var k = 0; k < this.kernelWidth; ++k)
                     {
                         this.filterJagged[i][j, k] = filter[i, j, k];
                     }
@@ -111,11 +111,11 @@
 
             for (var i = 0; i < this.inputDepth; ++i)
             {
-                for (var j = 0; j < 1; ++j)
+                for (var j = 0; j < this.filterCount; ++j)
                 {
-                    for (var k = 0; k < this.kernelHeight; ++k)
+                    for (var k = 0; k < this.outputHeight; ++k)
                     {
-                        for (var l = 0; l < this.kernelWidth; ++l)
+                        for (var l = 0; l < this.outputWidth; ++l)
                         {
                             output[i, j, k, l] = this.outputJagged[i, j][k, l];
                         }

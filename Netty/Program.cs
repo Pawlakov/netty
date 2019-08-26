@@ -7,51 +7,32 @@
 
     public static class Program
     {
-        private const int Height = 3;
+        private const int Depth = 2;
 
-        private const int Width = 3;
+        private const int Height = 2;
 
-        private const int KernelHeight = 3;
+        private const int Width = 2;
 
-        private const int KernelWidth = 3;
+        private const int FilterCount = 2;
 
-        private const int Padding = 1;
+        private const int KernelHeight = 2;
+
+        private const int KernelWidth = 2;
+
+        private const int Padding = 0;
 
         private const float LearningFactor = 0.1f;
 
         public static void Main(string[] args)
         {
-            var input = new float[1, Height, Width];
-            for (var i = 0; i < Height; ++i)
-            {
-                for (var j = 0; j < Width; ++j)
-                {
-                    input[0, i, j] = 0.1f * i;
-                }
-            }
-
-            var template = new float[1, Height - KernelHeight + (2 * Padding) + 1, Width - KernelWidth + (2 * Padding) + 1];
-            for (var i = 0; i < template.GetLength(1); ++i)
-            {
-                for (var j = 0; j < template.GetLength(2); ++j)
-                {
-                    template[0, i, j] = 0.1f * i;
-                }
-            }
-
-            float[,,] output = null;
-            var gradient = new float[1, Height - KernelHeight + (2 * Padding) + 1, Width - KernelWidth + (2 * Padding) + 1];
+            var input = new float[2, 2, 2] {{{0f, 1f}, {1f, 2f}}, {{2f, 1f}, {2f, 1f}}};
+            var template = new float[2, 1, 1] {{{15f}}, {{15f}}};
+            var gradient = new float[2, 1, 1];
             var net = new NeuralNet();
-            net.Add(new ConvolutionLayer(Height, Width, KernelHeight, KernelWidth, Padding));
-            net.Add(new ConvolutionLayer(Height, Width, KernelHeight, KernelWidth, Padding));
-            //net.Add(new ActivationLayer(Height - KernelHeight + (2 * Padding) + 1, Width - KernelWidth + (2 * Padding) + 1));
-            for (var i = 0; i < 10000; ++i)
-            {
-                output = net.FeedForward(input);
-                ErrorHelper.CalculateErrorGradient(template, output, gradient);
-                var inputGradient = net.BackPropagate(gradient, LearningFactor);
-            }
-
+            net.Add(new ConvolutionLayer(2, 2, 2, 2, 2, 2, 0));
+            var output = net.FeedForward(input);
+            ErrorHelper.CalculateErrorGradient(template, output, gradient);
+            var inputGradient = net.BackPropagate(gradient, LearningFactor);
             Console.Clear();
             var error = ErrorHelper.CalculateError(template, output);
             Console.WriteLine("Error: {0:0.0000}", error);
