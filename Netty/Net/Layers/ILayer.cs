@@ -11,6 +11,12 @@ namespace Netty.Net.Layers
     /// </summary>
     public interface ILayer
     {
+        int OutputDepth { get; }
+
+        int OutputHeight { get; }
+
+        int OutputWidth { get; }
+
         /// <summary>
         /// Feeds forward the values through the layer.
         /// </summary>

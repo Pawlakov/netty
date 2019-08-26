@@ -55,6 +55,12 @@ namespace Netty.Net.Layers
 
         private readonly MultiChannelConvolution inputGradientConvolution;
 
+        public int OutputDepth => this.filterCount;
+
+        public int OutputHeight => this.outputHeight;
+
+        public int OutputWidth => this.outputWidth;
+
         public ConvolutionLayer(int depth, int height, int width, int filterCount, int kernelHeight, int kernelWidth, int padding)
         {
             var random = new RandomInitializer();

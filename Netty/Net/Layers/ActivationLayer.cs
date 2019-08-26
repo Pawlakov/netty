@@ -23,6 +23,12 @@ namespace Netty.Net.Layers
 
         private readonly float[,,] gradientCostOverInput;
 
+        public int OutputDepth => depth;
+
+        public int OutputHeight => height;
+
+        public int OutputWidth => width;
+
         public ActivationLayer(int depth, int height, int width)
         {
             this.depth = depth;
