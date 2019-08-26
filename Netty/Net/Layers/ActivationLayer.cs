@@ -4,7 +4,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Netty.Net
+namespace Netty.Net.Layers
 {
     using Netty.Net.Helpers;
 
@@ -13,6 +13,8 @@ namespace Netty.Net
     /// </summary>
     public class ActivationLayer : ILayer
     {
+        private readonly int depth;
+
         private readonly int height;
 
         private readonly int width;
@@ -21,17 +23,18 @@ namespace Netty.Net
 
         private readonly float[,,] gradientCostOverInput;
 
-        public ActivationLayer(int height, int width)
+        public ActivationLayer(int depth, int height, int width)
         {
+            this.depth = depth;
             this.height = height;
             this.width = width;
-            this.output = new float[1, height, width];
-            this.gradientCostOverInput = new float[1, height, width];
+            this.output = new float[depth, height, width];
+            this.gradientCostOverInput = new float[depth, height, width];
         }
 
         public float[,,] FeedForward(float[,,] input)
         {
-            for (var i = 0; i < 1; ++i)
+            for (var i = 0; i < this.depth; ++i)
             {
                 for (var j = 0; j < this.height; ++j)
                 {
@@ -47,7 +50,7 @@ namespace Netty.Net
 
         public float[,,] BackPropagate(float[,,] gradientCostOverOutput, float learningFactor = 1f)
         {
-            for (var i = 0; i < 1; ++i)
+            for (var i = 0; i < this.depth; ++i)
             {
                 for (var j = 0; j < this.height; ++j)
                 {

@@ -4,7 +4,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Netty.Net
+namespace Netty.Net.Layers
 {
     /// <summary>
     /// Defines the interface of a sequential model layer.

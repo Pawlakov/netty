@@ -4,7 +4,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Netty.Net
+namespace Netty.Net.Layers
 {
     using Netty.Net.Helpers;
 
