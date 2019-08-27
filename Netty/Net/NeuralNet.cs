@@ -2,6 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Linq;
+    using Netty.Net.Helpers;
     using Netty.Net.Layers;
     using Netty.Net.Layers.Builders;
 
@@ -10,6 +11,8 @@
         private readonly IList<ILayerBuilder> layerBuilders = new List<ILayerBuilder>();
 
         private readonly IList<ILayer> layers = new List<ILayer>();
+
+        private float[,,] gradient;
 
         int OutputDepth => this.layers.Reverse().First().OutputDepth;
 
@@ -32,6 +35,16 @@
                 inputWidth = layer.OutputWidth;
                 this.layers.Add(layer);
             }
+
+            gradient = new float[inputDepth, inputHeight, inputWidth];
+        }
+
+        public float Learn(float[,,] input, float[,,] target)
+        {
+            var output = FeedForward(input);
+            ErrorHelper.CalculateErrorGradient(target, output, gradient);
+            var inputGradient = BackPropagate(gradient);
+            return ErrorHelper.CalculateError(target, output);
         }
 
         public float[,,] FeedForward(float[,,] input)
@@ -39,7 +52,7 @@
             return this.layers.Aggregate(input, (current, layer) => layer.FeedForward(current));
         }
 
-        public float[,,] BackPropagate(float[,,] gradientCostOverOutput)
+        private float[,,] BackPropagate(float[,,] gradientCostOverOutput)
         {
             return this.layers.Reverse().Aggregate(gradientCostOverOutput, (current, layer) => layer.BackPropagate(current, 1));
         }
