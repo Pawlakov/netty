@@ -35,7 +35,9 @@
             net.Add(new ConvolutionLayerBuilder(2, 2, 2, 1));
             net.Add(new ActivationLayerBuilder());
             net.Build(2, 2, 2);
-            net.Learn(new[] { Tuple.Create(input, template)}, 100000, 1);
+            net.Learn(new[] { Tuple.Create(input, template)}, 500, 1);
+            var output = net.FeedForward(input);
+            Console.WriteLine("Error: {0:0.0000}", ErrorHelper.CalculateError(template, output));
         }
     }
 }
