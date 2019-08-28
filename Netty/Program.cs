@@ -35,13 +35,7 @@
             net.Add(new ConvolutionLayerBuilder(2, 2, 2, 1));
             net.Add(new ActivationLayerBuilder());
             net.Build(2, 2, 2);
-            float error = 1f;
-            while(error > 0.0001)
-            {
-                error = net.Learn(input, template);
-                Console.Clear();
-                Console.WriteLine("Error: {0:0.0000}", error);
-            }
+            net.Learn(new[] { Tuple.Create(input, template)}, 100000, 1);
         }
     }
 }

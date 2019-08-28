@@ -47,6 +47,8 @@ namespace Netty.Net.Layers
 
         private readonly float[,,,] gradientCostOverWeights;
 
+        private readonly float[,,,] gradientCostOverWeightsTemporary;
+
         private readonly float[,,] gradientCostOverInput;
 
         private readonly MultiChannelConvolution feedForwardConvolution;
@@ -95,6 +97,7 @@ namespace Netty.Net.Layers
             this.gradientCostOverBias = new float[filterCount];
             this.gradientCostOverOutputWithPadding = new float[filterCount, height + kernelHeight - 1, width + kernelWidth - 1];
             this.gradientCostOverWeights = new float[filterCount, depth, kernelHeight, kernelWidth];
+            this.gradientCostOverWeightsTemporary = new float[filterCount, depth, kernelHeight, kernelWidth];
             this.gradientCostOverInput = new float[depth, height, width];
 
             this.feedForwardConvolution = new MultiChannelConvolution(depth, height + (2 * padding), width + (2 * padding), filterCount, kernelHeight, kernelWidth);
@@ -125,12 +128,11 @@ namespace Netty.Net.Layers
             // Calculate bias gradient.
             for (var i = 0; i < this.filterCount; ++i)
             {
-                this.gradientCostOverBias[i] = 0f;
                 for (var j = 0; j < this.outputHeight; ++j)
                 {
                     for (var k = 0; k < this.outputWidth; ++k)
                     {
-                        this.gradientCostOverBias[i] += gradientCostOverOutput[i, j, k];
+                        this.gradientCostOverBias[i] += learningFactor * gradientCostOverOutput[i, j, k];
                     }
                 }
             }
@@ -139,17 +141,37 @@ namespace Netty.Net.Layers
             this.filterGradientConvolution.Convolve(
                 this.inputWithPadding,
                 gradientCostOverOutput,
-                this.gradientCostOverWeights);
+                this.gradientCostOverWeightsTemporary);
+            for (var i = 0; i < this.filterCount; ++i)
+            {
+                for (var j = 0; j < this.depth; ++j)
+                {
+                    for (var k = 0; k < this.kernelHeight; ++k)
+                    {
+                        for (var l = 0; l < this.kernelWidth; ++l)
+                        {
+                            this.gradientCostOverWeights[i, j, k, l] += learningFactor * this.gradientCostOverWeightsTemporary[i, j, k, l];
+                        }
+                    }
+                }
+            }
 
             // Calculate inputs gradient.
             MatrixHelper.Pad(gradientCostOverOutput, this.gradientCostOverOutputWithPadding, this.kernelHeight - 1 - this.padding, this.kernelHeight - 1 - this.padding);
             MatrixHelper.Flip(this.filter, this.filterFlipped);
             this.inputGradientConvolution.Convolve(this.gradientCostOverOutputWithPadding, this.filterFlipped, this.gradientCostOverInput);
 
+            // Return input gradient.
+            return this.gradientCostOverInput;
+        }
+
+        public void UpdateParameters()
+        {
             // Apply bias gradient.
             for (var i = 0; i < this.filterCount; ++i)
             {
-                this.bias[i] -= learningFactor * this.gradientCostOverBias[i];
+                this.bias[i] -= this.gradientCostOverBias[i];
+                this.gradientCostOverBias[i] = 0f;
             }
 
             // Apply filter gradient.
@@ -161,14 +183,12 @@ namespace Netty.Net.Layers
                     {
                         for (var l = 0; l < this.kernelWidth; ++l)
                         {
-                            this.filter[i, j, k, l] -= learningFactor * this.gradientCostOverWeights[i, j, k, l];
+                            this.filter[i, j, k, l] -= this.gradientCostOverWeights[i, j, k, l];
+                            this.gradientCostOverWeights[i, j, k, l] = 0f;
                         }
                     }
                 }
             }
-
-            // Return input gradient.
-            return this.gradientCostOverInput;
         }
     }
 }

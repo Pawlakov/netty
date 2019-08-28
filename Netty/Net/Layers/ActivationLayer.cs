@@ -69,5 +69,7 @@ namespace Netty.Net.Layers
 
             return this.gradientCostOverInput;
         }
+
+        public void UpdateParameters() {}
     }
 }

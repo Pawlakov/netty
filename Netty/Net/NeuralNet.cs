@@ -1,7 +1,9 @@
 ﻿namespace Netty.Net
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Medallion;
     using Netty.Net.Helpers;
     using Netty.Net.Layers;
     using Netty.Net.Layers.Builders;
@@ -39,12 +41,31 @@
             gradient = new float[inputDepth, inputHeight, inputWidth];
         }
 
-        public float Learn(float[,,] input, float[,,] target)
+        public void Learn(IEnumerable<Tuple<float[,,], float[,,]>> samples, int epochs, int batchSize)
         {
-            var output = FeedForward(input);
-            ErrorHelper.CalculateErrorGradient(target, output, gradient);
-            var inputGradient = BackPropagate(gradient);
-            return ErrorHelper.CalculateError(target, output);
+            var count = samples.Count();
+            for(var i = 0; i < epochs; ++i)
+            {
+                var shuffled = samples.Shuffled();
+                var batchCounter = 0;
+                foreach(var sample in shuffled)
+                {
+                    var output = FeedForward(sample.Item1);
+                    ErrorHelper.CalculateErrorGradient(sample.Item2, output, gradient);
+                    var inputGradient = BackPropagate(gradient);
+                    ++batchCounter;
+                    if(batchCounter == batchSize)
+                    {
+                        batchCounter = 0;
+                        UpdateParameters();
+                    }
+                }
+
+                if (batchCounter > 0)
+                {
+                    UpdateParameters();
+                }
+            }
         }
 
         public float[,,] FeedForward(float[,,] input)
@@ -55,6 +76,14 @@
         private float[,,] BackPropagate(float[,,] gradientCostOverOutput)
         {
             return this.layers.Reverse().Aggregate(gradientCostOverOutput, (current, layer) => layer.BackPropagate(current, 1));
+        }
+
+        private void UpdateParameters()
+        {
+            foreach (var layer in layers)
+            {
+                layer.UpdateParameters();
+            }
         }
     }
 }

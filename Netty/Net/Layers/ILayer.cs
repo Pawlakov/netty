@@ -41,5 +41,7 @@ namespace Netty.Net.Layers
         /// The gradient of cost over this layer's input.
         /// </returns>
         float[,,] BackPropagate(float[,,] gradientCostOverOutput, float learningFactor = 1f);
+
+        void UpdateParameters();
     }
 }
