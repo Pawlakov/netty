@@ -1,6 +1,9 @@
 ﻿namespace Netty
 {
     using System;
+    using System.IO;
+
+    using Microsoft.Extensions.Configuration;
 
     using Netty.Net;
     using Netty.Net.Helpers;
@@ -26,6 +29,11 @@
 
         public static void Main(string[] args)
         {
+            var configBuilder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", true, true);
+            var configuration = configBuilder.Build();
+
             var input = new float[2, 2, 2] { { { 0f, 1f }, { 1f, 2f } }, { { 2f, 1f }, { 2f, 1f } } };
             var template =
                 new float[2, 2, 2] { { { 0.5f, 0.1f }, { 0.0f, 0.6f } }, { { 1.0f, 1.0f }, { 0.5f, 0.9f } } };
