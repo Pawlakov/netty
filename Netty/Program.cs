@@ -24,10 +24,15 @@
             var dataset = input.Select(x => Tuple.Create(x.FloatedContent, x.FloatedContent)).ToArray();
 
             var net = new NeuralNet(3, 64, 64);
+            net.Add(new ConvolutionLayerBuilder(6, 3, 3, 1));
+            net.Add(new PoolingLayerBuilder(2, 2));
+            net.Add(new UnpoolingLayerBuilder(2, 2));
+            net.Add(new ConvolutionLayerBuilder(6, 3, 3, 1));
+            net.Add(new ActivationLayerBuilder());
             net.Add(new ConvolutionLayerBuilder(3, 3, 3, 1));
             net.Add(new ActivationLayerBuilder());
             net.Build();
-            net.Learn(dataset, 1000, 5);
+            net.Learn(dataset, 400, 5);
             var output = net.FeedForward(dataset[0].Item1);
             Console.WriteLine("Error: {0:0.0000}", ErrorHelper.CalculateError(dataset[0].Item2, output));
             outputFloater.Save(output);

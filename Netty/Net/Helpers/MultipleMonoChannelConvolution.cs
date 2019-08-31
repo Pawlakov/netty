@@ -109,9 +109,9 @@
                 }
             }
 
-            for (var i = 0; i < this.inputDepth; ++i)
+            for (var i = 0; i < this.filterCount; ++i)
             {
-                for (var j = 0; j < this.filterCount; ++j)
+                for (var j = 0; j < this.inputDepth; ++j)
                 {
                     for (var k = 0; k < this.outputHeight; ++k)
                     {

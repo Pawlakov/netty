@@ -14,7 +14,7 @@
 
         public ILayer Build(int inputDepth, int inputHeight, int inputWidth)
         {
-            return new PoolingLayer(inputDepth, inputHeight, inputWidth, this.kernelHeight, this.kernelHeight);
+            return new PoolingLayer(inputDepth, inputHeight, inputWidth, this.kernelHeight, this.kernelWidth);
         }
     }
 }

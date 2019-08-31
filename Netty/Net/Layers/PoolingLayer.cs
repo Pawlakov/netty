@@ -69,9 +69,9 @@
                     {
                         this.output[i, j, k] = this.inputWithPadding[i, j * this.kernelHeight, k * this.kernelWidth];
                         this.inputSwitches[i, j, k] = ValueTuple.Create(0, 0);
-                        for (var l = 0; l < this.outputHeight; ++l)
+                        for (var l = 0; l < this.kernelHeight; ++l)
                         {
-                            for (var m = l == 0 ? 1 : 0; m < this.outputWidth; ++m)
+                            for (var m = l == 0 ? 1 : 0; m < this.kernelWidth; ++m)
                             {
                                 var value = this.inputWithPadding[i, (j * this.kernelHeight) + l, (k * this.kernelWidth) + m];
                                 if (value > this.output[i, j, k])
