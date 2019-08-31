@@ -44,7 +44,7 @@
                 {
                     for (var k = 0; k < bitmap.Width; ++k)
                     {
-                        this.FloatedContent[i, j, k] = Toolkit.ToFloat(rgbValues[(((j * bitmapData.Stride) + bitmap.Width) * 4) + i]);
+                        this.FloatedContent[i, j, k] = Toolkit.ToFloat(rgbValues[(j * bitmapData.Stride) + (k * 4) + i]);
                     }
                 }
             }

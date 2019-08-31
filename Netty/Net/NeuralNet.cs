@@ -16,29 +16,42 @@
 
         private float[,,] gradient;
 
+        private int inputDepth;
+
+        private int inputHeight;
+
+        private int inputWidth;
+
         int OutputDepth => this.layers.Reverse().First().OutputDepth;
 
         int OutputHeight => this.layers.Reverse().First().OutputHeight;
 
         int OutputWidth => this.layers.Reverse().First().OutputWidth;
 
+        public NeuralNet(int inputDepth, int inputHeight, int inputWidth)
+        {
+            this.inputDepth = inputDepth;
+            this.inputHeight = inputHeight;
+            this.inputWidth = inputWidth;
+        }
+
         public void Add(ILayerBuilder layerBuilder)
         {
             this.layerBuilders.Add(layerBuilder);
         }
 
-        public void Build(int inputDepth, int inputHeight, int inputWidth)
+        public void Build()
         {
             foreach (var builder in this.layerBuilders)
             {
-                var layer = builder.Build(inputDepth, inputHeight, inputWidth);
-                inputDepth = layer.OutputDepth;
-                inputHeight = layer.OutputHeight;
-                inputWidth = layer.OutputWidth;
+                var layer = builder.Build(this.inputDepth, this.inputHeight, this.inputWidth);
+                this.inputDepth = layer.OutputDepth;
+                this.inputHeight = layer.OutputHeight;
+                this.inputWidth = layer.OutputWidth;
                 this.layers.Add(layer);
             }
 
-            gradient = new float[inputDepth, inputHeight, inputWidth];
+            gradient = new float[this.inputDepth, this.inputHeight, this.inputWidth];
         }
 
         public void Learn(IEnumerable<Tuple<float[,,], float[,,]>> samples, int epochs, int batchSize)
@@ -75,7 +88,7 @@
 
         private float[,,] BackPropagate(float[,,] gradientCostOverOutput)
         {
-            return this.layers.Reverse().Aggregate(gradientCostOverOutput, (current, layer) => layer.BackPropagate(current, 1));
+            return this.layers.Reverse().Aggregate(gradientCostOverOutput, (current, layer) => layer.BackPropagate(current, 0.1f));
         }
 
         private void UpdateParameters()

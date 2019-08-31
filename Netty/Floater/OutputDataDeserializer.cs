@@ -59,7 +59,7 @@
                 {
                     for (var k = 0; k < bitmap.Width; ++k)
                     {
-                        data[(((j * bitmapData.Stride) + bitmap.Width) * 4) + i] = Toolkit.ToByte(floated[i, j, k]);
+                        data[(j * bitmapData.Stride) + (k * 4) + i] = Toolkit.ToByte(floated[i, j, k]);
                     }
                 }
             }
@@ -76,7 +76,7 @@
             var bitmap = this.ToBitmap(floated);
 
             var timeStamp = DateTime.UtcNow.ToString("dd-MM-yyyy HH-mm-ss-fff");
-            var path = $"{this.outputDirectory}\\{timeStamp}.jpg";
+            var path = $"{this.outputDirectory}\\{timeStamp}.png";
             bitmap.Save(path, ImageFormat.Jpeg);
         }
     }
