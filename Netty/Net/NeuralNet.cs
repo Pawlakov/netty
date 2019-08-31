@@ -54,16 +54,20 @@
             gradient = new float[this.inputDepth, this.inputHeight, this.inputWidth];
         }
 
-        public void Learn(IEnumerable<Tuple<float[,,], float[,,]>> samples, int epochs, int batchSize)
+        public void Learn(IEnumerable<Tuple<float[,,], float[,,]>> samples, int epochs, int batchSize, LearningEvents events)
         {
             var count = samples.Count();
+            var error = 0f;
             for(var i = 0; i < epochs; ++i)
             {
+                error = 0f;
                 var shuffled = samples.Shuffled();
                 var batchCounter = 0;
+                var samplesDone = 0;
                 foreach(var sample in shuffled)
                 {
                     var output = FeedForward(sample.Item1);
+                    error += ErrorHelper.CalculateError(sample.Item2, output);
                     ErrorHelper.CalculateErrorGradient(sample.Item2, output, gradient);
                     var inputGradient = BackPropagate(gradient);
                     ++batchCounter;
@@ -72,13 +76,21 @@
                         batchCounter = 0;
                         UpdateParameters();
                     }
+
+                    ++samplesDone;
+                    events.InvokeEpochProgressUpdate(this, samplesDone, count);
                 }
 
                 if (batchCounter > 0)
                 {
                     UpdateParameters();
                 }
+
+                error /= count;
+                events.InvokeEpochDone(this, i + 1, epochs, error);
             }
+
+            events.InvokeAllDone(this, epochs, error);
         }
 
         public float[,,] FeedForward(float[,,] input)
