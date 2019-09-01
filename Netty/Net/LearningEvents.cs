@@ -15,11 +15,19 @@ namespace Netty.Net
 
         public async Task InvokeAllDone(object sender, int totalEpochs, float finalError)
         {
-            AllDone?.Invoke(sender, new AllDoneArgs
+            if (task != null)
             {
-                TotalEpochs = totalEpochs,
-                FinalError = finalError
-            });
+                await task;
+                task.Dispose();
+            }
+
+            task = Task.Run(() =>
+                AllDone?.Invoke(sender, new AllDoneArgs
+                {
+                    TotalEpochs = totalEpochs,
+                    FinalError = finalError
+                })
+            );
         }
 
         public async Task InvokeEpochDone(object sender, int doneEpochs, int totalEpochs, float currentError)

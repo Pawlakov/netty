@@ -47,12 +47,9 @@
             };
 
             var net = new NeuralNet(3, 64, 64);
-            net.Add(new ConvolutionLayerBuilder(6, 3, 3, 1));
-            net.Add(new ActivationLayerBuilder());
-            net.Add(new ConvolutionLayerBuilder(3, 3, 3, 1));
-            net.Add(new ActivationLayerBuilder());
+            net.Add(new DenseLayerBuilder(3, 64, 64));
             net.Build();
-            net.Learn(dataset, 300, 5, events);
+            net.Learn(dataset, 1, 5, events);
             foreach (var sample in dataset)
             {
                 var output = net.FeedForward(sample.Item1);
